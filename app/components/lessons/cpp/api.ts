@@ -1,16 +1,16 @@
 import { LessonData } from "../types";
 
-const lesson: LessonData = {
+const api: LessonData = {
   title: "REST API Development with Crow",
-  difficulty: "Advanced",
+  difficulty: "Intermediate",
   description:
-    "Build a complete REST API with Crow framework, including routing, middleware, and JSON handling",
+    "Build production-ready REST APIs with Crow framework, including validation, error handling, middleware, and advanced patterns for scalable C++ backend development.",
   objectives: [
-    "Design RESTful endpoints with proper HTTP methods",
-    "Implement request/response handling with JSON",
-    "Add custom middleware for logging and validation",
-    "Handle file uploads and multipart data",
-    "Implement API versioning and documentation",
+    "Create type-safe API controllers and route handlers",
+    "Implement request validation and error handling middleware",
+    "Build standardized API responses and error formats",
+    "Handle file uploads, pagination, and filtering",
+    "Optimize performance with multithreading and caching",
   ],
   content: `# REST API Development with Crow Framework
 
@@ -235,4 +235,4 @@ struct InputValidator : crow::ILocalMiddleware {
 };`,
 };
 
-export default lesson;
+export default api;

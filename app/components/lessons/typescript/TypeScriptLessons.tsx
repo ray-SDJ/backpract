@@ -21,7 +21,7 @@ interface SectionProps {
   };
 }
 
-export default function RubyTutorial() {
+export default function TypeScriptTutorial() {
   const [expandedSection, setExpandedSection] = useState<string>("intro");
 
   const sections = [
@@ -43,8 +43,8 @@ export default function RubyTutorial() {
           className="w-full p-6 text-left bg-white hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Icon className="w-5 h-5 text-red-600" />
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Icon className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -59,10 +59,9 @@ export default function RubyTutorial() {
             }`}
           />
         </button>
-
         {isExpanded && (
-          <div className="border-t border-gray-200 bg-gray-50 p-6">
-            {section.content}
+          <div className="border-t border-gray-200 bg-gray-50">
+            <div className="p-6">{section.content}</div>
           </div>
         )}
       </div>
@@ -70,28 +69,28 @@ export default function RubyTutorial() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-red-600 rounded-xl">
-              <BookOpen className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900">
-              Ruby on Rails Tutorial
-            </h1>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-blue-600 rounded-lg">
+            <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Master elegant web development with Ruby on Rails - from rapid
-            prototyping to scalable production applications.
-          </p>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              TypeScript & Node.js Backend Development
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Build robust backend applications with TypeScript, Express, and
+              modern development practices
+            </p>
+          </div>
         </div>
+      </div>
 
-        <div className="space-y-4">
-          {sections.map((section) => (
-            <Section key={section.id} section={section} />
-          ))}
-        </div>
+      <div className="space-y-4">
+        {sections.map((section) => (
+          <Section key={section.id} section={section} />
+        ))}
       </div>
     </div>
   );

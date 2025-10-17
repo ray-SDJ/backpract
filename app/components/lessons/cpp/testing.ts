@@ -1,382 +1,405 @@
 import { LessonData } from "../types";
 
-const lesson: LessonData = {
-  title: "Testing & Deployment for C++",
+const testing: LessonData = {
+  title: "Testing & Production Deployment",
   difficulty: "Advanced",
   description:
-    "Comprehensive testing strategies and deployment practices for C++ web applications",
+    "Implement comprehensive testing strategies with Google Test, set up production deployment with Docker, monitoring, and performance optimization for C++ applications.",
   objectives: [
-    "Set up Google Test framework for unit testing",
-    "Write integration tests for API endpoints",
-    "Implement performance benchmarking",
-    "Create Docker containers for deployment",
-    "Set up CI/CD pipelines for C++ projects",
+    "Set up Google Test framework with C++ configuration",
+    "Write unit tests for services and utilities",
+    "Create integration tests for API endpoints",
+    "Build production Docker containers and deployment pipelines",
+    "Implement monitoring, logging, and performance optimization",
   ],
-  content: `# Testing & Deployment for C++ Applications
+  content: `<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header Section -->
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-8 text-white">
+          <h1 class="text-3xl font-bold mb-2">Testing & Production Deployment</h1>
+          <p class="text-purple-100 text-lg">Master comprehensive testing with Google Test and production deployment strategies</p>
+        </div>
 
-Modern C++ development requires comprehensive testing and reliable deployment strategies.
-
-## Testing Framework Setup
-
-Add Google Test to CMakeLists.txt:
-\`\`\`cmake
-# Google Test
+        <!-- Main Content -->
+        <div class="p-8">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Content Column -->
+            <div class="lg:col-span-2 space-y-8">
+              
+              <section class="bg-blue-50 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold text-blue-800 mb-4 flex items-center">
+                  <span class="bg-blue-200 w-8 h-8 rounded-full flex items-center justify-center text-blue-800 font-bold mr-3">1</span>
+                  Testing Framework Setup
+                </h2>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">Google Test Configuration</h3>
+                  <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <h4 class="font-medium text-gray-700 mb-2">CMakeLists.txt Testing Setup</h4>
+                      <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code># Enable testing and find Google Test
+enable_testing()
 find_package(GTest REQUIRED)
-include(GoogleTest)
 
-# Test executable
-add_executable(tests
+# Add test executable
+add_executable(app_tests
     tests/test_main.cpp
-    tests/test_user.cpp
     tests/test_database.cpp
     tests/test_api.cpp
+    tests/test_auth.cpp
 )
 
-target_link_libraries(tests
+# Link test dependencies
+target_link_libraries(app_tests
     PRIVATE
     GTest::gtest
     GTest::gtest_main
-    # Your application libraries
+    SQLiteCpp
+    jwt-cpp
+    pthread
 )
 
-# Enable testing
-enable_testing()
-gtest_discover_tests(tests)
-\`\`\`
+# Register tests with CTest
+include(GoogleTest)
+gtest_discover_tests(app_tests)</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-## Unit Testing
+              <section class="bg-green-50 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold text-green-800 mb-4 flex items-center">
+                  <span class="bg-green-200 w-8 h-8 rounded-full flex items-center justify-center text-green-800 font-bold mr-3">2</span>
+                  Unit Testing Implementation
+                </h2>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">Database Testing with Mocks</h3>
+                  <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <h4 class="font-medium text-gray-700 mb-2">test_database.cpp</h4>
+                      <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code>#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include "../src/database.h"
 
-Create \`tests/test_user.cpp\`:
-\`\`\`cpp
-#include <gtest/gtest.h>
-#include "models/User.h"
-#include "auth/PasswordManager.h"
-
-class UserTest : public ::testing::Test {
+class DatabaseTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Set up test data
+        // Use in-memory SQLite for testing
+        db = std::make_unique<DatabaseManager>(":memory:");
+        db->initialize();
+    }
+    
+    std::unique_ptr<DatabaseManager> db;
+};
+
+TEST_F(DatabaseTest, CreateUser) {
+    User user{"john_doe", "john@test.com", "hashed_password"};
+    
+    EXPECT_TRUE(db->createUser(user));
+    
+    auto retrieved = db->getUserByUsername("john_doe");
+    ASSERT_TRUE(retrieved.has_value());
+    EXPECT_EQ(retrieved->username, "john_doe");
+    EXPECT_EQ(retrieved->email, "john@test.com");
+}
+
+TEST_F(DatabaseTest, DuplicateUserFails) {
+    User user{"john_doe", "john@test.com", "password"};
+    
+    EXPECT_TRUE(db->createUser(user));
+    EXPECT_FALSE(db->createUser(user)); // Should fail
+}</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="bg-yellow-50 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold text-yellow-800 mb-4 flex items-center">
+                  <span class="bg-yellow-200 w-8 h-8 rounded-full flex items-center justify-center text-yellow-800 font-bold mr-3">3</span>
+                  Integration Testing
+                </h2>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">API Endpoint Testing</h3>
+                  <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <h4 class="font-medium text-gray-700 mb-2">test_api.cpp</h4>
+                      <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code>#include <gtest/gtest.h>
+#include <crow.h>
+#include <curl/curl.h>
+#include "../src/app.h"
+
+class APITest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        app = createApp(); // Factory function
+        server_thread = std::thread([this]() {
+            app.port(18080).multithreaded().run();
+        });
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
     void TearDown() override {
-        // Clean up
-    }
-};
-
-TEST_F(UserTest, ValidUserCreation) {
-    User user("testuser", "test@example.com", "hashed_password");
-    
-    EXPECT_EQ(user.username, "testuser");
-    EXPECT_EQ(user.email, "test@example.com");
-    EXPECT_TRUE(user.is_active);
-}
-
-TEST_F(UserTest, UserValidation) {
-    User valid_user("validuser", "valid@example.com", "password123");
-    EXPECT_TRUE(valid_user.isValid());
-    
-    User invalid_user("", "invalid-email", "");
-    EXPECT_FALSE(invalid_user.isValid());
-}
-
-TEST_F(UserTest, PasswordHashing) {
-    std::string password = "TestPassword123!";
-    std::string hash = PasswordManager::hashPassword(password);
-    
-    EXPECT_NE(password, hash);
-    EXPECT_TRUE(PasswordManager::verifyPassword(password, hash));
-    EXPECT_FALSE(PasswordManager::verifyPassword("wrong_password", hash));
-}
-
-TEST_F(UserTest, PasswordStrengthValidation) {
-    EXPECT_TRUE(PasswordManager::isSecurePassword("ValidPass123!"));
-    EXPECT_FALSE(PasswordManager::isSecurePassword("weak"));
-    EXPECT_FALSE(PasswordManager::isSecurePassword("nouppercaseorno123!"));
-    EXPECT_FALSE(PasswordManager::isSecurePassword("NOLOWERCASE123!"));
-}
-\`\`\`
-
-## Integration Testing
-
-Create \`tests/test_api.cpp\`:
-\`\`\`cpp
-#include <gtest/gtest.h>
-#include <crow.h>
-#include <thread>
-#include <chrono>
-#include <curl/curl.h>
-
-class ApiIntegrationTest : public ::testing::Test {
-protected:
-    static void SetUpTestSuite() {
-        // Start test server
-        app_thread = std::thread([]() {
-            crow::SimpleApp app;
-            // Configure test routes
-            app.port(8081).run();
-        });
-        
-        // Wait for server to start
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    
-    static void TearDownTestSuite() {
-        // Stop test server
-        if (app_thread.joinable()) {
-            app_thread.join();
+        app.stop();
+        if (server_thread.joinable()) {
+            server_thread.join();
         }
     }
     
-    void SetUp() override {
-        // Initialize database with test data
-        test_db = std::make_unique<Database>(":memory:");
-        test_db->initialize();
-    }
-    
-private:
-    static std::thread app_thread;
-    std::unique_ptr<Database> test_db;
-    
-    // Helper function to make HTTP requests
-    std::string makeRequest(const std::string& url, const std::string& method = "GET", 
-                           const std::string& data = "") {
-        CURL* curl = curl_easy_init();
-        std::string response;
-        
-        if (curl) {
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-            
-            if (method == "POST") {
-                curl_easy_setopt(curl, CURLOPT_POST, 1L);
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-            }
-            
-            curl_easy_perform(curl);
-            curl_easy_cleanup(curl);
-        }
-        
-        return response;
-    }
-    
-    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
-        size_t totalSize = size * nmemb;
-        userp->append((char*)contents, totalSize);
-        return totalSize;
-    }
+    crow::SimpleApp app;
+    std::thread server_thread;
+    const std::string base_url = "http://localhost:18080";
 };
 
-std::thread ApiIntegrationTest::app_thread;
-
-TEST_F(ApiIntegrationTest, HealthEndpoint) {
-    std::string response = makeRequest("http://localhost:8081/health");
-    EXPECT_FALSE(response.empty());
+TEST_F(APITest, HealthCheck) {
+    auto response = makeRequest("GET", base_url + "/health");
     
-    auto json_response = nlohmann::json::parse(response);
-    EXPECT_EQ(json_response["status"], "healthy");
+    EXPECT_EQ(response.status_code, 200);
+    EXPECT_EQ(response.body, R"({"status":"healthy"})");
 }
 
-TEST_F(ApiIntegrationTest, UserRegistration) {
-    nlohmann::json user_data = {
-        {"username", "testuser"},
-        {"email", "test@example.com"},
-        {"password", "TestPass123!"}
-    };
+TEST_F(APITest, CreateUserEndpoint) {
+    std::string user_data = R"({
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "securepass123"
+    })";
     
-    std::string response = makeRequest(
-        "http://localhost:8081/api/v1/auth/register", 
-        "POST", 
-        user_data.dump()
-    );
+    auto response = makeRequest("POST", base_url + "/api/users", user_data);
     
-    auto json_response = nlohmann::json::parse(response);
-    EXPECT_TRUE(json_response["success"]);
-    EXPECT_FALSE(json_response["data"]["token"].empty());
-}
-\`\`\`
+    EXPECT_EQ(response.status_code, 201);
+    // Parse JSON response and verify user creation
+}</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-## Performance Benchmarking
+              <section class="bg-purple-50 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold text-purple-800 mb-4 flex items-center">
+                  <span class="bg-purple-200 w-8 h-8 rounded-full flex items-center justify-center text-purple-800 font-bold mr-3">4</span>
+                  Docker & Deployment
+                </h2>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">Production Dockerfile</h3>
+                  <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <h4 class="font-medium text-gray-700 mb-2">Multi-stage Production Build</h4>
+                      <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code># Multi-stage build for optimized production image
+FROM ubuntu:22.04 as builder
 
-Create \`benchmarks/api_benchmark.cpp\`:
-\`\`\`cpp
-#include <benchmark/benchmark.h>
-#include "database/Database.h"
-#include "models/User.h"
-
-static void BM_UserCreation(benchmark::State& state) {
-    Database db(":memory:");
-    db.initialize();
-    
-    for (auto _ : state) {
-        User user("testuser", "test@example.com", "hashed_password");
-        benchmark::DoNotOptimize(db.createUser(user));
-    }
-}
-BENCHMARK(BM_UserCreation);
-
-static void BM_PasswordHashing(benchmark::State& state) {
-    std::string password = "TestPassword123!";
-    
-    for (auto _ : state) {
-        std::string hash = PasswordManager::hashPassword(password);
-        benchmark::DoNotOptimize(hash);
-    }
-}
-BENCHMARK(BM_PasswordHashing);
-
-static void BM_JwtGeneration(benchmark::State& state) {
-    JwtManager jwt_manager("test_secret");
-    User user("testuser", "test@example.com", "hashed_password");
-    user.id = 1;
-    
-    for (auto _ : state) {
-        std::string token = jwt_manager.generateToken(user);
-        benchmark::DoNotOptimize(token);
-    }
-}
-BENCHMARK(BM_JwtGeneration);
-
-BENCHMARK_MAIN();
-\`\`\`
-
-## Docker Deployment
-
-Create \`Dockerfile\`:
-\`\`\`dockerfile
-# Multi-stage build for C++ application
-FROM ubuntu:22.04 AS builder
-
-# Install dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y \\
     build-essential \\
     cmake \\
     git \\
-    libssl-dev \\
+    pkg-config \\
     libsqlite3-dev \\
-    libcurl4-openssl-dev \\
-    pkg-config
+    libssl-dev \\
+    curl \\
+    zip \\
+    unzip \\
+    tar
 
+# Install vcpkg
+WORKDIR /opt
+RUN git clone https://github.com/Microsoft/vcpkg.git
+RUN ./vcpkg/bootstrap-vcpkg.sh
+
+# Copy source and build
 WORKDIR /app
 COPY . .
+RUN cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake
+RUN cmake --build build --config Release
 
-# Build application
-RUN mkdir build && cd build \\
-    && cmake -DCMAKE_BUILD_TYPE=Release .. \\
-    && make -j$(nproc)
-
-# Runtime image
+# Production stage
 FROM ubuntu:22.04
-
 RUN apt-get update && apt-get install -y \\
-    libssl3 \\
     libsqlite3-0 \\
-    libcurl4 \\
+    libssl3 \\
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
 WORKDIR /app
-COPY --from=builder /app/build/MyCppServer ./
-COPY --from=builder /app/config ./config
-
-# Change ownership
-RUN chown -R appuser:appuser /app
-USER appuser
+COPY --from=builder /app/build/myapp /app/
+COPY --from=builder /app/config/ /app/config/
 
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
+    CMD curl -f http://localhost:8080/health || exit 1
 
-CMD ["./MyCppServer"]
-\`\`\`
+USER 1000:1000
+CMD ["./myapp"]</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-## CI/CD Pipeline
+              <section class="bg-red-50 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold text-red-800 mb-4 flex items-center">
+                  <span class="bg-red-200 w-8 h-8 rounded-full flex items-center justify-center text-red-800 font-bold mr-3">5</span>
+                  Monitoring & Performance
+                </h2>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">Production Monitoring Setup</h3>
+                  <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                      <h4 class="font-medium text-gray-700 mb-2">Health Monitoring & Metrics</h4>
+                      <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code>#include <prometheus/exposer.h>
+#include <prometheus/registry.h>
+#include <prometheus/counter.h>
+#include <prometheus/histogram.h>
 
-Create \`.github/workflows/ci.yml\`:
-\`\`\`yaml
-name: C++ CI/CD Pipeline
+class MetricsCollector {
+private:
+    std::shared_ptr<prometheus::Registry> registry;
+    prometheus::Exposer exposer;
+    
+    prometheus::Family<prometheus::Counter>& request_counter;
+    prometheus::Family<prometheus::Histogram>& response_time_histogram;
+    
+public:
+    MetricsCollector() : 
+        registry(std::make_shared<prometheus::Registry>()),
+        exposer("0.0.0.0:9090"),
+        request_counter(prometheus::BuildCounter()
+            .Name("http_requests_total")
+            .Help("Total HTTP requests")
+            .Register(*registry)),
+        response_time_histogram(prometheus::BuildHistogram()
+            .Name("http_request_duration_seconds")
+            .Help("HTTP request duration")
+            .Register(*registry)) {
+        
+        exposer.RegisterCollectable(registry);
+    }
+    
+    void recordRequest(const std::string& method, const std::string& endpoint) {
+        request_counter.Add({{"method", method}, {"endpoint", endpoint}}).Increment();
+    }
+    
+    void recordResponseTime(double duration_seconds) {
+        response_time_histogram.Add({}).Observe(duration_seconds);
+    }
+};</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+            </div>
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        compiler: [gcc-11, clang-14]
-        build_type: [Debug, Release]
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake libssl-dev libsqlite3-dev libgtest-dev libcurl4-openssl-dev
-        
-    - name: Install Google Test
-      run: |
-        cd /usr/src/gtest
-        sudo cmake CMakeLists.txt
-        sudo make
-        sudo cp lib/*.a /usr/lib
-        
-    - name: Configure CMake
-      run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=\${{ matrix.build_type }}
-        
-    - name: Build
-      run: cmake --build build --config \${{ matrix.build_type }}
-      
-    - name: Test
-      run: |
-        cd build
-        ctest --output-on-failure
-        
-    - name: Run benchmarks
-      if: matrix.build_type == 'Release'
-      run: |
-        cd build
-        ./benchmarks --benchmark_format=json > benchmark_results.json
-        
-  docker:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Build Docker image
-      run: |
-        docker build -t my-cpp-server:latest .
-        
-    - name: Test Docker image
-      run: |
-        docker run -d -p 8080:8080 --name test-container my-cpp-server:latest
-        sleep 5
-        curl -f http://localhost:8080/health || exit 1
-        docker stop test-container
-\`\`\``,
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-6">
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🧪 Testing Best Practices</h3>
+                <ul class="space-y-3 text-sm text-gray-600">
+                  <li class="flex items-start">
+                    <span class="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">1</span>
+                    <span>Use in-memory databases for fast unit tests</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">2</span>
+                    <span>Mock external dependencies and services</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">3</span>
+                    <span>Test both success and failure scenarios</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">4</span>
+                    <span>Use fixtures for consistent test data</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🚀 Deployment Checklist</h3>
+                <ul class="space-y-3 text-sm text-gray-600">
+                  <li class="flex items-start">
+                    <span class="bg-green-200 text-green-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">✓</span>
+                    <span>Multi-stage Docker builds for size optimization</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="bg-green-200 text-green-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">✓</span>
+                    <span>Health checks and monitoring endpoints</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="bg-green-200 text-green-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">✓</span>
+                    <span>Security hardening and user permissions</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="bg-green-200 text-green-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">✓</span>
+                    <span>Metrics collection and alerting</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-purple-800 mb-4">💡 Pro Tips</h3>
+                <ul class="space-y-3 text-sm text-purple-700">
+                  <li class="flex items-start">
+                    <span class="text-purple-500 mr-2">•</span>
+                    <span>Use separate test databases to avoid data conflicts</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-500 mr-2">•</span>
+                    <span>Implement circuit breakers for external service calls</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-500 mr-2">•</span>
+                    <span>Use Google Benchmark for performance testing</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-500 mr-2">•</span>
+                    <span>Set up automated testing in CI/CD pipelines</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Steps -->
+          <div class="mt-12 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🎯 What You've Accomplished</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Testing Mastery</h3>
+                <ul class="space-y-2 text-gray-600">
+                  <li>✅ Google Test framework integration</li>
+                  <li>✅ Unit testing with mocks and fixtures</li>
+                  <li>✅ Integration testing for API endpoints</li>
+                  <li>✅ Performance benchmarking setup</li>
+                </ul>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Production Deployment</h3>
+                <ul class="space-y-2 text-gray-600">
+                  <li>✅ Docker containerization strategy</li>
+                  <li>✅ Health monitoring and metrics</li>
+                  <li>✅ Security hardening practices</li>
+                  <li>✅ CI/CD pipeline integration</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>`,
   practiceInstructions: [
     "Set up Google Test framework and write unit tests",
     "Create integration tests for all API endpoints",
     "Implement performance benchmarks with Google Benchmark",
-    "Create a multi-stage Docker build",
-    "Set up CI/CD pipeline with automated testing",
-    "Deploy to a cloud platform with proper monitoring",
+    "Build Docker containers for production deployment",
+    "Set up monitoring and logging infrastructure",
   ],
   hints: [
     "Use in-memory SQLite for faster test execution",
     "Mock external dependencies in unit tests",
     "Test both success and failure scenarios",
     "Use separate test databases to avoid conflicts",
-    "Measure and track performance regression over time",
+    "Implement proper error handling in tests",
   ],
   solution: `// Complete testing setup with mocking and comprehensive coverage
 
@@ -384,59 +407,157 @@ jobs:
 #include <gtest/gtest.h>
 
 // Mock database for unit testing
-class MockDatabase : public Database {
+class MockDatabase : public DatabaseInterface {
 public:
-    MOCK_METHOD(std::optional<User>, createUser, (const User& user), (override));
-    MOCK_METHOD(std::optional<User>, getUserById, (int id), (override));
+    MOCK_METHOD(bool, createUser, (const User& user), (override));
     MOCK_METHOD(std::optional<User>, getUserByUsername, (const std::string& username), (override));
-    MOCK_METHOD(std::vector<User>, getAllUsers, (), (override));
-    MOCK_METHOD(bool, updateUser, (const User& user), (override));
-    MOCK_METHOD(bool, deleteUser, (int id), (override));
+    MOCK_METHOD(bool, deleteUser, (const std::string& username), (override));
 };
 
-// Test fixture with mock
-class AuthControllerTest : public ::testing::Test {
+// Comprehensive test suite
+class UserServiceTest : public ::testing::Test {
 protected:
     void SetUp() override {
         mock_db = std::make_shared<MockDatabase>();
-        auth_controller = std::make_unique<AuthController>(mock_db, "test_secret");
+        user_service = std::make_unique<UserService>(mock_db);
     }
     
     std::shared_ptr<MockDatabase> mock_db;
-    std::unique_ptr<AuthController> auth_controller;
+    std::unique_ptr<UserService> user_service;
 };
 
-TEST_F(AuthControllerTest, LoginSuccess) {
-    User test_user;
-    test_user.id = 1;
-    test_user.username = "testuser";
-    test_user.password_hash = PasswordManager::hashPassword("password123");
-    test_user.is_active = true;
+TEST_F(UserServiceTest, CreateUserSuccess) {
+    User test_user{"testuser", "test@example.com", "hashed_password"};
     
-    EXPECT_CALL(*mock_db, getUserByUsername("testuser"))
-        .WillOnce(::testing::Return(test_user));
+    EXPECT_CALL(*mock_db, createUser(testing::_))
+        .WillOnce(testing::Return(true));
+        
+    auto result = user_service->registerUser("testuser", "test@example.com", "password123");
     
-    crow::request req;
-    req.body = R"({"username":"testuser","password":"password123"})";
-    
-    auto response = auth_controller->login(req);
-    EXPECT_EQ(response.code, 200);
+    EXPECT_TRUE(result.success);
+    EXPECT_EQ(result.message, "User created successfully");
 }
 
-// Memory leak detection
-class MemoryLeakTest : public ::testing::Test {
+TEST_F(UserServiceTest, CreateUserDuplicateEmail) {
+    EXPECT_CALL(*mock_db, getUserByUsername("testuser"))
+        .WillOnce(testing::Return(User{"existing", "test@example.com", "hash"}));
+        
+    auto result = user_service->registerUser("testuser", "test@example.com", "password123");
+    
+    EXPECT_FALSE(result.success);
+    EXPECT_EQ(result.message, "User already exists");
+}
+
+// Integration test with test server
+class APIIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        initial_memory = getCurrentMemoryUsage();
+        // Start test server on different port
+        app = createTestApp();
+        server_thread = std::thread([this]() {
+            app.port(19080).run();
+        });
+        
+        // Wait for server to start
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
     
     void TearDown() override {
-        size_t final_memory = getCurrentMemoryUsage();
-        EXPECT_LT(final_memory - initial_memory, 1024 * 1024); // Less than 1MB leak
+        app.stop();
+        if (server_thread.joinable()) {
+            server_thread.join();
+        }
     }
     
+    crow::SimpleApp app;
+    std::thread server_thread;
+};
+
+TEST_F(APIIntegrationTest, FullUserWorkflow) {
+    // Test user registration
+    auto register_response = makeHttpRequest(
+        "POST", 
+        "http://localhost:19080/api/register",
+        R"({"username":"testuser","email":"test@example.com","password":"password123"})"
+    );
+    
+    EXPECT_EQ(register_response.status, 201);
+    
+    // Test user login
+    auto login_response = makeHttpRequest(
+        "POST",
+        "http://localhost:19080/api/login", 
+        R"({"username":"testuser","password":"password123"})"
+    );
+    
+    EXPECT_EQ(login_response.status, 200);
+    
+    // Extract JWT token from response
+    auto token = extractTokenFromResponse(login_response.body);
+    EXPECT_FALSE(token.empty());
+    
+    // Test authenticated endpoint
+    auto profile_response = makeHttpRequestWithAuth(
+        "GET",
+        "http://localhost:19080/api/profile",
+        token
+    );
+    
+    EXPECT_EQ(profile_response.status, 200);
+    EXPECT_THAT(profile_response.body, testing::HasSubstr("testuser"));
+}
+
+// Performance benchmarking
+#include <benchmark/benchmark.h>
+
+static void BM_DatabaseQuery(benchmark::State& state) {
+    DatabaseManager db(":memory:");
+    db.initialize();
+    
+    // Insert test data
+    for (int i = 0; i < 1000; ++i) {
+        User user{
+            "user" + std::to_string(i),
+            "user" + std::to_string(i) + "@test.com",
+            "hashed_password"
+        };
+        db.createUser(user);
+    }
+    
+    for (auto _ : state) {
+        auto users = db.getAllUsers();
+        benchmark::DoNotOptimize(users);
+    }
+}
+BENCHMARK(BM_DatabaseQuery);
+
+static void BM_PasswordHashing(benchmark::State& state) {
+    for (auto _ : state) {
+        auto hash = hashPassword("test_password_123");
+        benchmark::DoNotOptimize(hash);
+    }
+}
+BENCHMARK(BM_PasswordHashing);
+
+static void BM_JWTGeneration(benchmark::State& state) {
+    for (auto _ : state) {
+        auto token = generateJWT("testuser", "user");
+        benchmark::DoNotOptimize(token);
+    }
+}
+BENCHMARK(BM_JWTGeneration);
+
+// Memory usage monitoring for performance tests
+class MemoryMonitor {
 private:
     size_t initial_memory;
+    
+public:
+    MemoryMonitor() : initial_memory(getCurrentMemoryUsage()) {}
+    
+    size_t getMemoryDelta() {
+        return getCurrentMemoryUsage() - initial_memory;
+    }
     
     size_t getCurrentMemoryUsage() {
         // Implementation to get current memory usage
@@ -445,4 +566,4 @@ private:
 };`,
 };
 
-export default lesson;
+export default testing;

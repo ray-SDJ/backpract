@@ -36,7 +36,7 @@ const CodeExplanation: React.FC<CodeExplanationProps> = ({
 export const AuthSection = {
   id: "auth",
   title: "Authentication & Security",
-  icon: <Shield className="w-5 h-5 text-red-600" />,
+  icon: Shield,
   overview:
     "Implement JWT authentication, password hashing, and security best practices in Crow applications.",
   content: (

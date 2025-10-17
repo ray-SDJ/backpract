@@ -1,7 +1,6 @@
 import React from "react";
-import { TestTube } from "lucide-react";
+import { Code2 } from "lucide-react";
 
-// TypeScript interfaces
 interface CodeExplanationProps {
   code: string;
   explanation: Array<{ label: string; desc: string }>;
@@ -33,303 +32,103 @@ const CodeExplanation: React.FC<CodeExplanationProps> = ({
   </div>
 );
 
-export const TestingSection = {
-  id: "testing",
-  title: "Testing & Deployment",
-  icon: <TestTube className="w-5 h-5 text-blue-600" />,
+export const ApiSection = {
+  id: "api",
+  title: "REST API Development",
+  icon: Code2,
   overview:
-    "Write comprehensive tests with Catch2, and deploy to production with containerization and best practices.",
+    "Build production-ready REST APIs with Crow framework, including routing, middleware, and JSON handling.",
   content: (
     <div className="space-y-6">
       <div>
-        <h3 className="font-bold text-lg mb-2">Unit Testing with Catch2</h3>
-        <CodeExplanation
-          code={`// CMakeLists.txt with Catch2
-cmake_minimum_required(VERSION 3.10)
-project(crow_tests)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-// Include dependencies
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/crow/include)
-
-// Add Catch2
-find_package(Catch2 3 REQUIRED)
-
-// Add test executable
-add_executable(tests tests.cpp)
-target_link_libraries(tests Catch2::Catch2WithMain)
-
-// tests.cpp
-#define CATCH_CONFIG_MAIN
-#include <catch2/catch_all.hpp>
-#include "crow_all.h"
-#include <string>
-
-// Utility function to test
-std::string hashPassword(const std::string& password) {
-    return password + "_hashed";
-}
-
-TEST_CASE("Password hashing", "[security]") {
-    REQUIRE(hashPassword("test123") == "test123_hashed");
-    REQUIRE(hashPassword("") != "");
-}
-
-TEST_CASE("JSON parsing") {
-    auto json = crow::json::load(R"({"name":"John","age":30})");
-    REQUIRE(json["name"].s() == "John");
-    REQUIRE(json["age"].i() == 30);
-}
-
-TEST_CASE("User validation") {
-    SECTION("Valid user data") {
-        auto json = crow::json::load(R"({"username":"john","email":"john@example.com","age":25})");
-        REQUIRE(json.has("username"));
-        REQUIRE(json["age"].i() >= 18);
-    }
-
-    SECTION("Invalid email format") {
-        auto json = crow::json::load(R"({"username":"john","email":"invalid","age":25})");
-        REQUIRE(!json["email"].s().find("@") != std::string::npos);
-    }
-
-    SECTION("Underage user") {
-        auto json = crow::json::load(R"({"username":"john","email":"john@example.com","age":15})");
-        REQUIRE(json["age"].i() < 18);
-    }
-}
-
-TEST_CASE("Response handling", "[api]") {
-    crow::SimpleApp app;
-    
-    CROW_ROUTE(app, "/test")
-    ([]() {
-        return crow::response(200, "Success");
-    });
-
-    auto res = crow::response(200, "Success");
-    REQUIRE(res.code == 200);
-    REQUIRE(res.body == "Success");
-}
-
-TEST_CASE("API endpoints", "[integration]") {
-    crow::SimpleApp app;
-    std::map<int, std::string> items;
-    int nextId = 1;
-
-    CROW_ROUTE(app, "/items").methods("POST"_method)
-    ([&items, &nextId](const crow::request& req) {
-        auto json = crow::json::load(req.body);
-        items[nextId] = json["name"].s();
-        crow::json::wvalue response;
-        response["id"] = nextId;
-        response["name"] = items[nextId];
-        nextId++;
-        return crow::response(201, response);
-    });
-
-    REQUIRE(items.empty());
-}`}
-          explanation={[
-            {
-              label: "CATCH_CONFIG_MAIN",
-              desc: "Catch2 macro that generates main function for tests",
-            },
-            {
-              label: "TEST_CASE(name, tags)",
-              desc: "Define individual test case with optional tag categories",
-            },
-            {
-              label: "SECTION(name)",
-              desc: "Organize test code into logical sections within TEST_CASE",
-            },
-            {
-              label: "REQUIRE(condition)",
-              desc: "Assert that condition is true, fail test if false",
-            },
-            {
-              label: "find_package(Catch2)",
-              desc: "Locate Catch2 testing framework for linking",
-            },
-          ]}
-        />
+        <h3 className="font-bold text-lg mb-2">RESTful API Design with Crow</h3>
+        <p className="text-gray-700 mb-3">
+          Crow provides excellent support for building high-performance REST
+          APIs with modern C++.
+        </p>
+        <div className="bg-gray-100 rounded-lg p-4 text-sm space-y-2 font-mono mb-4">
+          <div>GET /api/users → Get all users</div>
+          <div>GET /api/users/123 → Get user with ID 123</div>
+          <div>POST /api/users → Create new user</div>
+          <div>PUT /api/users/123 → Update user 123</div>
+          <div>DELETE /api/users/123 → Delete user 123</div>
+        </div>
       </div>
 
       <div>
-        <h3 className="font-bold text-lg mb-2">
-          Docker Deployment & Production Setup
-        </h3>
+        <h3 className="font-bold text-lg mb-2">REST API Implementation</h3>
         <CodeExplanation
-          code={`# Dockerfile
-FROM ubuntu:22.04
+          code={`#include "crow_all.h"
+#include <map>
 
-WORKDIR /app
+// User model
+struct User {
+    int id;
+    std::string username;
+    std::string email;
+};
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \\
-    build-essential \\
-    cmake \\
-    libssl-dev \\
-    libsqlite3-dev \\
-    curl \\
-    && rm -rf /var/lib/apt/lists/*
+// User controller class
+class UserController {
+private:
+    std::map<int, User> users;
+    int nextId = 1;
 
-# Copy source code
-COPY . .
+public:
+    // GET /api/users
+    crow::response getAllUsers() {
+        crow::json::wvalue response = crow::json::wvalue::list();
+        for (const auto& [id, user] : users) {
+            crow::json::wvalue userJson;
+            userJson["id"] = user.id;
+            userJson["username"] = user.username;
+            response[response.size()] = std::move(userJson);
+        }
+        return crow::response(200, response);
+    }
 
-# Build application
-RUN mkdir build && cd build && \\
-    cmake .. && \\
-    make -j$(nproc)
-
-# Create non-root user
-RUN useradd -m -u 1000 appuser && \\
-    chown -R appuser:appuser /app
-USER appuser
-
-# Expose port
-EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \\
-    CMD curl -f http://localhost:8080/health || exit 1
-
-# Run application
-CMD ["/app/build/crow_app"]
-
-# docker-compose.yml
-version: '3.8'
-
-services:
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - JWT_SECRET=your-secret-key
-      - DATABASE_PATH=/app/data/app.db
-    volumes:
-      - ./data:/app/data
-    restart: unless-stopped
-    
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-    restart: unless-stopped
-
-volumes:
-  data:
-
-# CMakeLists.txt for production build
-cmake_minimum_required(VERSION 3.10)
-project(crow_app_prod)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/crow/include)
-
-link_directories(/usr/lib/x86_64-linux-gnu)
-
-add_executable(crow_app 
-    src/main.cpp
-    src/database.cpp
-    src/auth.cpp
-)
-
-target_link_libraries(crow_app
-    ssl
-    crypto
-    sqlite3
-    pthread
-)
-
-set_property(TARGET crow_app PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-
-# main.cpp with production setup
-#include "crow_all.h"
-#include <iostream>
-#include <cstdlib>
-
-int main() {
-    crow::SimpleApp app;
-
-    // Health check endpoint
-    CROW_ROUTE(app, "/health")
-    ([]() {
-        crow::json::wvalue response;
-        response["status"] = "healthy";
-        return crow::response(response);
-    });
-
-    CROW_ROUTE(app, "/metrics")
-    ([]() {
-        crow::json::wvalue response;
-        response["uptime"] = 12345;
-        response["requests"] = 1000;
-        return crow::response(response);
-    });
-
-    // Get configuration from environment
-    const char* port_str = std::getenv("PORT");
-    int port = port_str ? std::stoi(port_str) : 8080;
-    
-    const char* threads_str = std::getenv("WORKER_THREADS");
-    int threads = threads_str ? std::stoi(threads_str) : 4;
-
-    CROW_LOG_INFO << "Starting server on port " << port;
-    CROW_LOG_INFO << "Worker threads: " << threads;
-
-    app.port(port).concurrency(threads).run();
-    return 0;
-}`}
+    // POST /api/users
+    crow::response createUser(const crow::request& req) {
+        auto json = crow::json::load(req.body);
+        if (!json) {
+            return crow::response(400, "Invalid JSON");
+        }
+        
+        User user;
+        user.id = nextId++;
+        user.username = json["username"].s();
+        users[user.id] = user;
+        return crow::response(201, "User created");
+    }
+};`}
           explanation={[
             {
-              label: "FROM ubuntu:22.04",
-              desc: "Base image with essential build tools pre-installed",
+              label: "UserController",
+              desc: "Encapsulates all user-related API logic and data management",
             },
             {
-              label: "RUN useradd appuser",
-              desc: "Create non-root user for security best practices",
+              label: "crow::json::wvalue",
+              desc: "Crow's JSON write value for building JSON responses",
             },
             {
-              label: "HEALTHCHECK",
-              desc: "Container health monitoring for orchestration systems",
+              label: ".methods('GET'_method)",
+              desc: "Restricts route to specific HTTP methods",
             },
             {
-              label: "-O3 -march=native",
-              desc: "Compiler flags for aggressive optimization in production",
-            },
-            {
-              label: "std::getenv()",
-              desc: "Read environment variables for runtime configuration",
+              label: "crow::response(code)",
+              desc: "Creates HTTP response with status code and body",
             },
           ]}
         />
       </div>
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <h4 className="font-semibold text-green-900 mb-2">Production Tips</h4>
+        <h4 className="font-semibold text-green-900 mb-2">
+          💡 API Best Practices
+        </h4>
         <ul className="text-sm text-green-800 space-y-1">
-          <li>
-            • Run <code className="bg-white px-1 rounded">cmake . && make</code>{" "}
-            with release flags for optimization
-          </li>
-          <li>• Use Docker multi-stage builds to reduce image size</li>
-          <li>• Implement proper logging with structured formats</li>
-          <li>• Add monitoring endpoints for health and metrics</li>
-          <li>• Use reverse proxy (Nginx) for SSL termination</li>
-          <li>• Implement rate limiting and request validation</li>
+          <li>• Use proper HTTP status codes (200, 201, 400, 404, 500)</li>
+          <li>• Implement consistent JSON response structure</li>
         </ul>
       </div>
     </div>

@@ -1,87 +1,163 @@
 import React from "react";
 import { Play } from "lucide-react";
 
+interface CodeExplanationProps {
+  code: string;
+  explanation: Array<{ label: string; desc: string }>;
+}
+
+const CodeExplanation: React.FC<CodeExplanationProps> = ({
+  code,
+  explanation,
+}) => (
+  <div className="mt-4 space-y-3">
+    <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+      <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
+        <code>{code}</code>
+      </pre>
+    </div>
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <h4 className="font-semibold text-blue-900 mb-3">Code Explanation:</h4>
+      <div className="space-y-2">
+        {explanation.map((item, index) => (
+          <div key={index} className="flex gap-3">
+            <code className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-mono whitespace-nowrap">
+              {item.label}
+            </code>
+            <span className="text-blue-700 text-sm">{item.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 export const IntroSection = {
   id: "intro",
   title: "Ruby on Rails Setup",
-  icon: <Play className="w-5 h-5 text-red-600" />,
-  overview: "Ruby environment and Rails framework introduction",
+  icon: Play,
+  overview:
+    "Get started with Ruby on Rails - install, create your first API, and understand the MVC architecture",
   content: (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-lg border border-red-200">
-        <h3 className="text-lg font-semibold text-red-900 mb-3">
-          💎 Welcome to Ruby on Rails Development
-        </h3>
-        <p className="text-red-800 leading-relaxed">
-          Learn to build elegant web applications with Ruby on Rails. Master the
-          Rails conventions, Active Record ORM, and create powerful APIs with
-          authentication and real-time features.
+      <div>
+        <h3 className="font-bold text-lg mb-2">What is Ruby on Rails?</h3>
+        <p className="text-gray-700 mb-3">
+          Ruby on Rails (Rails) is a server-side web application framework
+          written in Ruby. It follows the Model-View-Controller (MVC) pattern
+          and emphasizes convention over configuration, making development
+          faster and more enjoyable.
         </p>
+        <ul className="list-disc list-inside text-gray-700 mt-2 space-y-1">
+          <li>
+            <strong>Convention over Configuration:</strong> Sensible defaults
+            reduce decision fatigue
+          </li>
+          <li>
+            <strong>DRY Principle:</strong> Don&apos;t Repeat Yourself - write
+            code once
+          </li>
+          <li>
+            <strong>Active Record ORM:</strong> Intuitive database interactions
+          </li>
+          <li>
+            <strong>RESTful by default:</strong> Built-in support for REST APIs
+          </li>
+          <li>
+            <strong>Rapid development:</strong> Get applications running quickly
+          </li>
+        </ul>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <h4 className="font-semibold text-slate-900 mb-3">
-            💎 What You'll Learn
-          </h4>
-          <ul className="space-y-2 text-sm text-slate-700">
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Ruby language fundamentals and Rails framework
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Model-View-Controller architecture
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Active Record ORM and database migrations
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              RESTful API development and authentication
-            </li>
-          </ul>
-        </div>
+      <div>
+        <h3 className="font-bold text-lg mb-2">Your First Rails API</h3>
+        <CodeExplanation
+          code={`# Install Rails
+$ gem install rails
 
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <h4 className="font-semibold text-slate-900 mb-3">
-            📚 Prerequisites
-          </h4>
-          <ul className="space-y-2 text-sm text-slate-700">
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Basic Ruby programming knowledge
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Understanding of web development concepts
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Command line interface familiarity
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Basic database and SQL knowledge
-            </li>
-          </ul>
-        </div>
+# Create new Rails API project
+$ rails new my_api --api --database=postgresql
+$ cd my_api
+
+# Generate a Posts controller
+$ rails generate controller Api::Posts index show create
+
+# app/controllers/api/posts_controller.rb
+class Api::PostsController < ApplicationController
+  # GET /api/posts
+  def index
+    posts = [
+      { id: 1, title: 'First Post', content: 'Hello Rails!' },
+      { id: 2, title: 'Second Post', content: 'Learning Ruby' }
+    ]
+    
+    render json: { data: posts, status: 'success' }
+  end
+  
+  # GET /api/posts/:id
+  def show
+    post = { id: params[:id], title: 'My Post', content: 'Content here' }
+    render json: { data: post }
+  end
+  
+  # POST /api/posts
+  def create
+    post = {
+      id: rand(1000),
+      title: params[:title],
+      content: params[:content]
+    }
+    
+    render json: { data: post }, status: :created
+  end
+end
+
+# config/routes.rb
+Rails.application.routes.draw do
+  namespace :api do
+    resources :posts, only: [:index, :show, :create]
+  end
+  
+  get '/health', to: proc { [200, {}, ['OK']] }
+end
+
+# Start the server
+$ rails server`}
+          explanation={[
+            {
+              label: "rails new my_api --api",
+              desc: "Creates API-only Rails app without views and frontend assets",
+            },
+            {
+              label: "namespace :api",
+              desc: "Groups routes under /api prefix for API versioning",
+            },
+            {
+              label: "resources :posts",
+              desc: "Generates RESTful routes automatically (index, show, create, update, destroy)",
+            },
+            {
+              label: "render json:",
+              desc: "Sends JSON response to the client with specified data",
+            },
+            {
+              label: "params[:id]",
+              desc: "Accesses URL parameters passed in the request",
+            },
+          ]}
+        />
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4 text-sm">
-        <div className="text-center p-4 bg-slate-50 rounded-lg">
-          <div className="text-2xl font-bold text-red-600">30 min</div>
-          <div className="text-slate-600">Rails Setup</div>
-        </div>
-        <div className="text-center p-4 bg-slate-50 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">40 min</div>
-          <div className="text-slate-600">Active Record</div>
-        </div>
-        <div className="text-center p-4 bg-slate-50 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">45 min</div>
-          <div className="text-slate-600">API Development</div>
-        </div>
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <h4 className="font-semibold text-green-900 mb-2">💡 Quick Test</h4>
+        <p className="text-sm text-green-800">
+          Run with{" "}
+          <code className="bg-white px-2 py-1 rounded">rails server</code>, then
+          visit{" "}
+          <code className="bg-white px-2 py-1 rounded">
+            http://localhost:3000/api/posts
+          </code>
+        </p>
       </div>
     </div>
   ),

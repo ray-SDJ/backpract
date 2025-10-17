@@ -578,6 +578,51 @@ const technologyModules: Record<string, Module[]> = {
     },
   ],
 
+  // TypeScript & Node.js lessons
+  typescript: [
+    {
+      id: "1",
+      title: "TypeScript & Node.js Development",
+      lessons: [
+        {
+          id: "intro",
+          title: "TypeScript Setup & Express",
+          duration: "25 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "database",
+          title: "TypeORM & Database Integration",
+          duration: "30 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "api",
+          title: "REST API with Express & TypeScript",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "auth",
+          title: "JWT Authentication & Security",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "testing",
+          title: "Jest Testing & Production Deployment",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+  ],
+
   // C++ lessons
   cpp: [
     {

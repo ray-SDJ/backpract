@@ -1,16 +1,16 @@
 import { LessonData } from "../types";
 
-const lesson: LessonData = {
-  title: "Authentication & Security in C++",
+const auth: LessonData = {
+  title: "JWT Authentication & Security",
   difficulty: "Advanced",
   description:
-    "Implement JWT authentication, password hashing, and security best practices in C++ web applications",
+    "Implement comprehensive JWT authentication system with C++, including middleware, role-based access control, password security, and session management.",
   objectives: [
-    "Implement password hashing with bcrypt",
-    "Generate and validate JWT tokens",
-    "Create authentication middleware",
-    "Handle user sessions securely",
-    "Apply C++ security best practices",
+    "Implement JWT token generation and validation with C++",
+    "Create authentication middleware and route protection",
+    "Build role-based access control (RBAC) system",
+    "Handle password hashing, validation, and security best practices",
+    "Implement token refresh, logout, and session management",
   ],
   content: `# Authentication & Security in C++
 
@@ -319,4 +319,4 @@ struct SecurityHeaders : crow::ILocalMiddleware {
 };`,
 };
 
-export default lesson;
+export default auth;

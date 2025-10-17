@@ -36,7 +36,7 @@ const CodeExplanation: React.FC<CodeExplanationProps> = ({
 export const DatabaseSection = {
   id: "database",
   title: "Database Integration & ORM",
-  icon: <Database className="w-5 h-5 text-green-600" />,
+  icon: Database,
   overview:
     "Integrate with SQLite/PostgreSQL databases using modern C++ libraries and ORM patterns.",
   content: (

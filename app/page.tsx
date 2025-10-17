@@ -101,6 +101,30 @@ export default function App() {
             <ResizableHandle className="h-1 bg-slate-200 hover:bg-blue-400 transition-colors" />
 
             {/* Code Editor and Output Section */}
+            <ResizablePanel defaultSize={55} minSize={30}>
+              <ResizablePanelGroup direction="horizontal">
+                {/* Code Editor */}
+                <ResizablePanel defaultSize={50} minSize={35}>
+                  <CodeEditor
+                    onRunCode={handleRunCode}
+                    currentTechnology={currentTechnology}
+                    currentLessonId={currentLessonId}
+                  />
+                </ResizablePanel>
+
+                <ResizableHandle className="w-1 bg-slate-200 hover:bg-blue-400 transition-colors" />
+
+                {/* Output Console */}
+                <ResizablePanel defaultSize={50} minSize={35}>
+                  <OutputConsole
+                    output={output}
+                    error={error}
+                    isRunning={isRunning}
+                    exitCode={exitCode}
+                  />
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </ResizablePanel>
           </ResizablePanelGroup>
         </div>
       </div>

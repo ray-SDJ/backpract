@@ -84,40 +84,10 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
       description: "Type-safe Node.js backend",
     },
     {
-      id: "kotlin",
-      name: "Kotlin",
-      icon: "🎯",
-      description: "JVM backend development",
-    },
-    {
-      id: "swift",
-      name: "Swift",
-      icon: "🦉",
-      description: "Server-side Swift",
-    },
-    {
       id: "cpp",
       name: "C++",
       icon: "⚡",
       description: "High-performance backends",
-    },
-    {
-      id: "scala",
-      name: "Scala",
-      icon: "🎭",
-      description: "Functional JVM backend",
-    },
-    {
-      id: "haskell",
-      name: "Haskell",
-      icon: "λ",
-      description: "Pure functional backend",
-    },
-    {
-      id: "ocaml",
-      name: "OCaml",
-      icon: "🐪",
-      description: "Functional systems programming",
     },
   ];
 

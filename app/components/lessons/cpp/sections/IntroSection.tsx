@@ -36,7 +36,7 @@ const CodeExplanation: React.FC<CodeExplanationProps> = ({
 export const IntroSection = {
   id: "intro",
   title: "Modern C++ & Crow Framework Setup",
-  icon: <Code className="w-5 h-5 text-blue-600" />,
+  icon: Code,
   overview:
     "Get started with modern C++ development using the Crow framework for building high-performance web applications.",
   content: (
@@ -46,7 +46,8 @@ export const IntroSection = {
         <p className="text-gray-700 mb-3">
           Crow is a modern C++ web framework designed for building REST APIs
           with minimal overhead. It provides a clean, intuitive interface
-          inspired by Flask while leveraging C++'s performance capabilities.
+          inspired by Flask while leveraging C++&apos;s performance
+          capabilities.
         </p>
         <ul className="list-disc list-inside text-gray-700 mt-2 space-y-1">
           <li>
