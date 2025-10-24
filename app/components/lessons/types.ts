@@ -1,3 +1,13 @@
+// Validation criteria for practice exercises
+export interface ValidationCriteria {
+  requiredIncludes?: string[]; // Code must include these strings
+  requiredPatterns?: RegExp[]; // Code must match these patterns
+  forbiddenIncludes?: string[]; // Code must NOT include these strings
+  minLines?: number; // Minimum number of lines
+  maxLines?: number; // Maximum number of lines
+  customValidator?: (code: string) => { valid: boolean; message: string };
+}
+
 // Base types for all lesson components
 export interface LessonData {
   title: string;
@@ -8,6 +18,8 @@ export interface LessonData {
   practiceInstructions: string[];
   hints: string[];
   solution: string;
+  validationCriteria?: ValidationCriteria; // Optional validation for practice
+  starterCode?: string; // Initial code for the exercise
 }
 
 export interface LessonComponentProps {
@@ -22,6 +34,7 @@ export interface LanguageLessonRegistry {
 // Supported programming languages
 export type ProgrammingLanguage =
   | "javascript"
+  | "nodejs"
   | "typescript"
   | "python"
   | "java"
@@ -40,9 +53,9 @@ export type ProgrammingLanguage =
 // Technology mapping (maps course technology to programming languages)
 export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
   // JavaScript/Node.js ecosystem
-  node: "javascript",
-  nodejs: "javascript",
-  express: "javascript",
+  node: "nodejs",
+  nodejs: "nodejs",
+  express: "nodejs",
   javascript: "javascript",
   js: "javascript",
   react: "javascript",

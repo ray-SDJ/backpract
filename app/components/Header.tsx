@@ -99,7 +99,7 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Code className="w-6 h-6 text-blue-600" />
-          <h1 className="text-xl font-semibold">BackPract</h1>
+          <h1 className="text-xl font-semibold">Backend Practice</h1>
           <Badge variant="secondary" className="text-xs">
             v1.0
           </Badge>

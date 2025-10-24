@@ -1,24 +1,70 @@
-import { BookOpen, Lightbulb, CheckCircle, Code, Loader2 } from "lucide-react";
+import {
+  BookOpen,
+  Lightbulb,
+  CheckCircle,
+  Code,
+  Loader2,
+  Play,
+  CheckSquare,
+  AlertCircle,
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "./ui/resizable";
 import { useEffect, useState } from "react";
 import { LessonRegistry } from "./lessons/LessonRegistry";
 import { LessonData } from "./lessons/types";
 import { LessonHTML } from "./lessons/LessonCard";
+import { CodeEditor } from "./CodeEditor";
+import { OutputConsole } from "./OutputConsole";
+import {
+  ValidationService,
+  ValidationResult,
+} from "./lessons/ValidationService";
 
 interface LessonContentProps {
   lessonId: string;
   currentTechnology: string;
+  onRunCode: (code: string, language: string) => Promise<void>;
+  output: string;
+  error: string | undefined;
+  isRunning: boolean;
+  exitCode: number | undefined;
+  currentCode?: string; // Current code in editor
+  onCodeChange?: (code: string) => void; // Callback when code changes
+  onLessonSelect?: (lessonId: string) => void; // Callback to navigate to next lesson
 }
 
 export default function LessonContent({
   lessonId,
   currentTechnology,
+  onRunCode,
+  output,
+  error: codeError,
+  isRunning,
+  exitCode,
+  currentCode = "",
+  onCodeChange,
+  onLessonSelect,
 }: LessonContentProps) {
   const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
+  const [isLessonCompleted, setIsLessonCompleted] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
+  const [isCheckingWork, setIsCheckingWork] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadLesson = async () => {
@@ -51,6 +97,123 @@ export default function LessonContent({
 
     loadLesson();
   }, [lessonId, currentTechnology]);
+
+  // Check lesson completion status
+  useEffect(() => {
+    const completed = ValidationService.isLessonCompleted(
+      lessonId,
+      currentTechnology
+    );
+    setIsLessonCompleted(completed);
+  }, [lessonId, currentTechnology]);
+
+  // Validate practice exercise
+  const handleValidatePractice = () => {
+    if (!lessonData?.validationCriteria || !currentCode) {
+      setValidationResult({
+        valid: false,
+        message: "Please write some code first!",
+        completedCriteria: [],
+        failedCriteria: ["No code provided"],
+      });
+      return;
+    }
+
+    const result = ValidationService.validateCode(
+      currentCode,
+      lessonData.validationCriteria
+    );
+    setValidationResult(result);
+
+    if (result.valid) {
+      ValidationService.markLessonCompleted(lessonId, currentTechnology);
+      setIsLessonCompleted(true);
+    }
+  };
+
+  // Check work with AI
+  const handleCheckWork = async () => {
+    if (!currentCode || !lessonData?.solution) {
+      setAiError("No code to check or solution not available");
+      return;
+    }
+
+    setIsCheckingWork(true);
+    setAiError(null);
+    setAiFeedback(null);
+
+    try {
+      const response = await fetch("/api/compare-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userInput: currentCode,
+          lessonSolution: lessonData.solution,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAiFeedback(data.feedback);
+      } else {
+        setAiError(data.error || "Failed to get AI feedback");
+      }
+    } catch (error) {
+      console.error("Error checking work:", error);
+      setAiError("Failed to connect to AI service");
+    } finally {
+      setIsCheckingWork(false);
+    }
+  };
+
+  // Get previous lesson ID
+  const getPreviousLessonId = (): string | null => {
+    // Parse current lesson ID (e.g., "2-1" -> module 2, lesson 1)
+    const [moduleNum, lessonNum] = lessonId.split("-").map(Number);
+
+    // If we're at lesson 1, try to go to previous module's last lesson
+    if (lessonNum <= 1) {
+      return null; // Can't go back from first lesson
+    }
+
+    // Go to previous lesson in same module
+    const previousInModule = `${moduleNum}-${lessonNum - 1}`;
+    return previousInModule;
+  };
+
+  // Get next lesson ID
+  const getNextLessonId = (): string | null => {
+    // Parse current lesson ID (e.g., "2-1" -> module 2, lesson 1)
+    const [moduleNum, lessonNum] = lessonId.split("-").map(Number);
+
+    // Try next lesson in same module first
+    const nextInModule = `${moduleNum}-${lessonNum + 1}`;
+
+    // Check if next lesson exists by trying to load it
+    // For now, we'll use a simple increment pattern
+    // You can enhance this by checking against the actual lesson registry
+    return nextInModule;
+  };
+
+  // Handle previous lesson navigation
+  const handlePreviousLesson = () => {
+    const previousLessonId = getPreviousLessonId();
+    if (previousLessonId && onLessonSelect) {
+      onLessonSelect(previousLessonId);
+    }
+  };
+
+  // Handle next lesson navigation
+  const handleNextLesson = () => {
+    // Navigate to next lesson without requiring completion
+    const nextLessonId = getNextLessonId();
+    if (nextLessonId && onLessonSelect) {
+      onLessonSelect(nextLessonId);
+    }
+  };
 
   if (loading) {
     return (
@@ -102,169 +265,395 @@ export default function LessonContent({
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="border-b bg-slate-50 px-6 py-4">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-5 h-5 text-blue-600" />
-          <h1 className="text-xl font-semibold text-slate-900">
-            {lessonData.title}
-          </h1>
-          <Badge className={getDifficultyColor(lessonData.difficulty)}>
-            {lessonData.difficulty}
-          </Badge>
-        </div>
-        <p className="text-slate-600 text-sm mb-3">{lessonData.description}</p>
-        <div className="text-xs text-slate-500">
-          <span className="font-medium">Technology:</span> {currentTechnology} •
-          <span className="font-medium ml-2">Lesson:</span> {lessonId}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-hidden">
-        <Tabs defaultValue="content" className="flex flex-col h-full">
-          <div className="border-b px-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="content" className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Content
-              </TabsTrigger>
-              <TabsTrigger
-                value="objectives"
-                className="flex items-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Objectives
-              </TabsTrigger>
-              <TabsTrigger value="practice" className="flex items-center gap-2">
-                <Code className="w-4 h-4" />
-                Practice
-              </TabsTrigger>
-              <TabsTrigger value="hints" className="flex items-center gap-2">
-                <Lightbulb className="w-4 h-4" />
-                Hints
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <div className="flex-1 overflow-hidden">
-            <TabsContent value="content" className="h-full m-0">
-              <ScrollArea className="h-full">
-                <div className="p-6">
-                  <div className="lesson-content">
-                    <LessonHTML content={lessonData.content} />
-                  </div>
+      <ResizablePanelGroup direction="vertical">
+        {/* Lesson Content Section */}
+        <ResizablePanel defaultSize={35} minSize={25}>
+          <div className="flex flex-col h-full bg-white">
+            <div className="border-b bg-slate-50 px-6 py-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
+                  <h1 className="text-xl font-semibold text-slate-900">
+                    {lessonData.title}
+                  </h1>
+                  <Badge className={getDifficultyColor(lessonData.difficulty)}>
+                    {lessonData.difficulty}
+                  </Badge>
                 </div>
-              </ScrollArea>
-            </TabsContent>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handlePreviousLesson}
+                    disabled={!getPreviousLessonId()}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleNextLesson}
+                    size="sm"
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    Next Lesson
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-slate-600 text-sm mb-3">
+                {lessonData.description}
+              </p>
+              <div className="text-xs text-slate-500">
+                <span className="font-medium">Technology:</span>{" "}
+                {currentTechnology} •
+                <span className="font-medium ml-2">Lesson:</span> {lessonId}
+              </div>
+            </div>
 
-            <TabsContent value="objectives" className="h-full m-0">
-              <ScrollArea className="h-full">
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Learning Objectives
-                  </h3>
-                  <div className="space-y-3">
-                    {lessonData.objectives.map((objective, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div className="mt-1">
-                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-xs font-medium text-blue-600">
-                              {index + 1}
-                            </span>
-                          </div>
+            <div className="flex-1 overflow-hidden">
+              <Tabs defaultValue="content" className="flex flex-col h-full">
+                <div className="border-b px-6">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger
+                      value="content"
+                      className="flex items-center gap-2"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      Content
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="objectives"
+                      className="flex items-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Objectives
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="practice"
+                      className="flex items-center gap-2"
+                    >
+                      <Code className="w-4 h-4" />
+                      Practice
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="hints"
+                      className="flex items-center gap-2"
+                    >
+                      <Lightbulb className="w-4 h-4" />
+                      Hints
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <div className="flex-1 overflow-hidden">
+                  <TabsContent value="content" className="h-full m-0">
+                    <ScrollArea className="h-full">
+                      <div className="p-6">
+                        <div className="lesson-content">
+                          <LessonHTML content={lessonData.content} />
                         </div>
-                        <p className="text-slate-700">{objective}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </ScrollArea>
-            </TabsContent>
+                    </ScrollArea>
+                  </TabsContent>
 
-            <TabsContent value="practice" className="h-full m-0">
-              <ScrollArea className="h-full">
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Practice Instructions
-                  </h3>
-                  {lessonData.practiceInstructions?.length > 0 ? (
-                    <div className="space-y-3">
-                      {lessonData.practiceInstructions.map(
-                        (instruction, index) => (
-                          <div key={index} className="flex items-start gap-3">
-                            <div className="mt-1">
-                              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                                <span className="text-xs font-medium text-green-600">
-                                  {index + 1}
-                                </span>
+                  <TabsContent value="objectives" className="h-full m-0">
+                    <ScrollArea className="h-full">
+                      <div className="p-6">
+                        <h3 className="text-lg font-semibold mb-4">
+                          Learning Objectives
+                        </h3>
+                        <div className="space-y-3">
+                          {lessonData.objectives.map((objective, index) => (
+                            <div key={index} className="flex items-start gap-3">
+                              <div className="mt-1">
+                                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                  <span className="text-xs font-medium text-blue-600">
+                                    {index + 1}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-slate-700">{objective}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+
+                  <TabsContent
+                    value="practice"
+                    className="h-full m-0 flex flex-col"
+                  >
+                    {/* Practice Instructions */}
+                    {lessonData.practiceInstructions?.length > 0 && (
+                      <div className="p-4 bg-blue-50 border-b border-blue-200">
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Code className="w-5 h-5 text-blue-600" />
+                          Practice Questions
+                        </h3>
+                        <div className="space-y-2">
+                          {lessonData.practiceInstructions.map(
+                            (instruction, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-3 bg-white p-3 rounded-lg border border-blue-100"
+                              >
+                                <div className="mt-0.5">
+                                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-xs font-medium text-blue-600">
+                                      {index + 1}
+                                    </span>
+                                  </div>
+                                </div>
+                                <p className="text-slate-700 text-sm">
+                                  {instruction}
+                                </p>
+                              </div>
+                            )
+                          )}
+                        </div>
+
+                        {/* Check Work Button (AI-powered) */}
+                        {lessonData.solution && (
+                          <div className="mt-4 pt-3 border-t border-blue-200">
+                            <Button
+                              onClick={handleCheckWork}
+                              disabled={
+                                !currentCode ||
+                                currentCode.trim() === "" ||
+                                isCheckingWork
+                              }
+                              className="w-full bg-purple-600 hover:bg-purple-700"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              {isCheckingWork
+                                ? "Checking..."
+                                : "Check Work with AI"}
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* AI Feedback Display */}
+                        {aiFeedback && (
+                          <div className="mt-3 p-4 rounded-lg border bg-purple-50 border-purple-200">
+                            <div className="flex items-start gap-2 mb-2">
+                              <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-purple-900 mb-2">
+                                  AI Feedback
+                                </h4>
+                                <div className="text-sm text-purple-800 whitespace-pre-wrap">
+                                  {aiFeedback}
+                                </div>
                               </div>
                             </div>
-                            <p className="text-slate-700">{instruction}</p>
                           </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Code className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500">
-                        No specific practice instructions for this lesson.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
+                        )}
 
-            <TabsContent value="hints" className="h-full m-0">
-              <ScrollArea className="h-full">
-                <div className="p-6 space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-yellow-600" />
-                      Hints
-                    </h3>
-                    {lessonData.hints?.length > 0 ? (
-                      <div className="space-y-3">
-                        {lessonData.hints.map((hint, index) => (
-                          <div
-                            key={index}
-                            className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs font-medium text-yellow-600 bg-yellow-200 px-2 py-1 rounded">
-                                {index + 1}
+                        {/* AI Error Display */}
+                        {aiError && (
+                          <div className="mt-3 p-3 rounded-lg border bg-red-50 border-red-200">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-red-600" />
+                              <span className="text-sm text-red-800">
+                                {aiError}
                               </span>
-                              <p className="text-yellow-800 text-sm">{hint}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-slate-500 text-sm">
-                        No hints available for this lesson.
-                      </p>
-                    )}
-                  </div>
+                        )}
 
-                  {lessonData.solution && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        Solution
-                      </h3>
-                      <div className="bg-slate-50 border rounded-lg p-4">
-                        <pre className="text-sm font-mono whitespace-pre-wrap text-slate-800 overflow-x-auto">
-                          <code>{lessonData.solution}</code>
-                        </pre>
+                        {/* Validation Controls */}
+                        {lessonData?.validationCriteria && (
+                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-blue-200">
+                            <div className="flex items-center gap-2">
+                              {isLessonCompleted ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-green-100 text-green-800"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Completed
+                                </Badge>
+                              ) : (
+                                <div className="text-xs text-slate-600">
+                                  <span className="font-medium">💡 Tip:</span>{" "}
+                                  Complete validation to mark this lesson as
+                                  done
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={handleValidatePractice}
+                                disabled={
+                                  !currentCode || currentCode.trim() === ""
+                                }
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Play className="w-4 h-4 mr-2" />
+                                Validate Code
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Validation Results */}
+                        {validationResult && (
+                          <div
+                            className={`mt-3 p-3 rounded-lg border ${
+                              validationResult.valid
+                                ? "bg-green-50 border-green-200"
+                                : "bg-red-50 border-red-200"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              {validationResult.valid ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <AlertCircle className="w-5 h-5 text-red-600" />
+                              )}
+                              <span
+                                className={`font-medium ${
+                                  validationResult.valid
+                                    ? "text-green-800"
+                                    : "text-red-800"
+                                }`}
+                              >
+                                {validationResult.message}
+                              </span>
+                            </div>
+
+                            {validationResult.completedCriteria.length > 0 && (
+                              <div className="space-y-1 mt-2">
+                                <h4 className="font-semibold text-xs text-slate-700 mb-1">
+                                  Completed Requirements:
+                                </h4>
+                                {validationResult.completedCriteria.map(
+                                  (criteria, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <CheckSquare className="w-3 h-3 text-green-600" />
+                                      <span className="text-green-700">
+                                        {criteria}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            )}
+
+                            {validationResult.failedCriteria.length > 0 && (
+                              <div className="space-y-1 mt-2">
+                                <h4 className="font-semibold text-xs text-slate-700 mb-1">
+                                  Missing Requirements:
+                                </h4>
+                                {validationResult.failedCriteria.map(
+                                  (criteria, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <div className="w-3 h-3 border-2 border-slate-300 rounded"></div>
+                                      <span className="text-slate-600">
+                                        {criteria}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
+                    )}
+
+                    {/* Code Editor and Output */}
+                    <div className="flex-1 flex">
+                      <ResizablePanelGroup direction="horizontal">
+                        {/* Code Editor */}
+                        <ResizablePanel defaultSize={80} minSize={50}>
+                          <CodeEditor
+                            onRunCode={onRunCode}
+                            currentTechnology={currentTechnology}
+                            currentLessonId={lessonId}
+                            initialCode={currentCode}
+                            onCodeChange={onCodeChange}
+                          />
+                        </ResizablePanel>
+
+                        <ResizableHandle className="w-1 bg-slate-200 hover:bg-blue-400 transition-colors" />
+
+                        {/* Output Console */}
+                        <ResizablePanel defaultSize={50} minSize={35}>
+                          <OutputConsole
+                            output={output}
+                            error={codeError}
+                            isRunning={isRunning}
+                            exitCode={exitCode}
+                          />
+                        </ResizablePanel>
+                      </ResizablePanelGroup>
                     </div>
-                  )}
+                  </TabsContent>
+
+                  <TabsContent value="hints" className="h-full m-0">
+                    <ScrollArea className="h-full">
+                      <div className="p-6 space-y-6">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Lightbulb className="w-5 h-5 text-yellow-600" />
+                            Hints
+                          </h3>
+                          {lessonData.hints?.length > 0 ? (
+                            <div className="space-y-3">
+                              {lessonData.hints.map((hint, index) => (
+                                <div
+                                  key={index}
+                                  className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-xs font-medium text-yellow-600 bg-yellow-200 px-2 py-1 rounded">
+                                      {index + 1}
+                                    </span>
+                                    <p className="text-yellow-800 text-sm">
+                                      {hint}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-slate-500 text-sm">
+                              No hints available for this lesson.
+                            </p>
+                          )}
+                        </div>
+
+                        {lessonData.solution && (
+                          <div>
+                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              Solution
+                            </h3>
+                            <div className="bg-slate-50 border rounded-lg p-4">
+                              <pre className="text-sm font-mono whitespace-pre-wrap text-slate-800 overflow-x-auto">
+                                <code>{lessonData.solution}</code>
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
                 </div>
-              </ScrollArea>
-            </TabsContent>
+              </Tabs>
+            </div>
           </div>
-        </Tabs>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

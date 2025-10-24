@@ -1,6 +1,7 @@
 import { CheckCircle2, Circle, Lock, PlayCircle } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Progress } from "./ui/progress";
+import { ValidationService } from "./lessons/ValidationService";
 
 interface Lesson {
   id: string;
@@ -50,47 +51,6 @@ const technologyModules: Record<string, Module[]> = {
           duration: "20 min",
           completed: false,
           locked: false,
-        },
-      ],
-    },
-    {
-      id: "2",
-      title: "Node.js & Express Fundamentals",
-      lessons: [
-        {
-          id: "2-1",
-          title: "Setting Up Node.js Project",
-          duration: "12 min",
-          completed: false,
-          locked: false,
-        },
-        {
-          id: "2-2",
-          title: "Your First Express Server",
-          duration: "18 min",
-          completed: false,
-          locked: false,
-        },
-        {
-          id: "2-3",
-          title: "Express Routing & Middleware",
-          duration: "25 min",
-          completed: false,
-          locked: false,
-        },
-        {
-          id: "2-4",
-          title: "Error Handling in Express",
-          duration: "20 min",
-          completed: false,
-          locked: true,
-        },
-        {
-          id: "2-5",
-          title: "Building RESTful APIs",
-          duration: "35 min",
-          completed: false,
-          locked: true,
         },
       ],
     },
@@ -669,11 +629,43 @@ const technologyModules: Record<string, Module[]> = {
   ],
 };
 
+// Apply dynamic lesson states based on ValidationService
+const applyDynamicLessonStates = (
+  modules: Module[],
+  technology: string
+): Module[] => {
+  return modules.map((module) => ({
+    ...module,
+    lessons: module.lessons.map((lesson, lessonIndex, allLessons) => {
+      const completed = ValidationService.isLessonCompleted(
+        lesson.id,
+        technology
+      );
+
+      // First lesson is always unlocked, subsequent lessons require previous lesson completion
+      let locked = false;
+      if (lessonIndex > 0) {
+        const previousLesson = allLessons[lessonIndex - 1];
+        locked = !ValidationService.isLessonCompleted(
+          previousLesson.id,
+          technology
+        );
+      }
+
+      return {
+        ...lesson,
+        completed,
+        locked,
+      };
+    }),
+  }));
+};
+
 // Fallback lessons for languages without specific modules
 const getModulesForTechnology = (technology: string): Module[] => {
   // Check if we have specific lessons for this technology
   if (technologyModules[technology]) {
-    return technologyModules[technology];
+    return applyDynamicLessonStates(technologyModules[technology], technology);
   }
 
   // Generate basic structure for other technologies
@@ -718,33 +710,7 @@ const getModulesForTechnology = (technology: string): Module[] => {
         },
       ],
     },
-    {
-      id: "2",
-      title: `${techName} Fundamentals`,
-      lessons: [
-        {
-          id: "8-1",
-          title: `${techName} Setup`,
-          duration: "15 min",
-          completed: false,
-          locked: false,
-        },
-        {
-          id: "8-2",
-          title: "First Web Server",
-          duration: "20 min",
-          completed: false,
-          locked: true,
-        },
-        {
-          id: "8-3",
-          title: "REST API Development",
-          duration: "25 min",
-          completed: false,
-          locked: true,
-        },
-      ],
-    },
+    // Create the fallback modules structure
     {
       id: "3",
       title: `Advanced ${techName}`,
@@ -773,6 +739,93 @@ const getModulesForTechnology = (technology: string): Module[] => {
       ],
     },
   ];
+
+  // Apply dynamic states to fallback lessons too
+  const fallbackModules = [
+    {
+      id: "1",
+      title: "Backend Development Basics",
+      lessons: [
+        {
+          id: "1-1",
+          title: "What is Backend Development?",
+          duration: "10 min",
+          completed: true,
+          locked: false,
+        },
+        {
+          id: "1-2",
+          title: "HTTP Basics",
+          duration: "15 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "1-3",
+          title: "REST API Fundamentals",
+          duration: "20 min",
+          completed: false,
+          locked: true,
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: `${techName} Fundamentals`,
+      lessons: [
+        {
+          id: "2-1",
+          title: `Getting Started with ${techName}`,
+          duration: "15 min",
+          completed: false,
+          locked: true,
+        },
+        {
+          id: "2-2",
+          title: "Basic Server Setup",
+          duration: "20 min",
+          completed: false,
+          locked: true,
+        },
+        {
+          id: "2-3",
+          title: "Routing & Middleware",
+          duration: "25 min",
+          completed: false,
+          locked: true,
+        },
+      ],
+    },
+    {
+      id: "3",
+      title: "Advanced Topics",
+      lessons: [
+        {
+          id: "3-1",
+          title: "Database Integration",
+          duration: "30 min",
+          completed: false,
+          locked: true,
+        },
+        {
+          id: "3-2",
+          title: "Authentication",
+          duration: "25 min",
+          completed: false,
+          locked: true,
+        },
+        {
+          id: "3-3",
+          title: "Testing & Deployment",
+          duration: "35 min",
+          completed: false,
+          locked: true,
+        },
+      ],
+    },
+  ];
+
+  return applyDynamicLessonStates(fallbackModules, technology);
 };
 
 export function CourseSidebar({

@@ -1,32 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "./components/Header";
 import { CourseSidebar } from "./components/CourseSidebar";
 import LessonContent from "./components/LessonContent";
-import { CodeEditor } from "./components/CodeEditor";
-import { OutputConsole } from "./components/OutputConsole";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "./components/ui/resizable";
+import { WelcomeScreen } from "./components/WelcomeScreen";
+import { CompletionScreen } from "./components/CompletionScreen";
+import { SessionManager } from "./services/SessionManager";
 import { pistonService } from "../lib/piston";
 
+type AppState = "welcome" | "learning" | "completed";
+
 export default function App() {
-  const [currentLessonId, setCurrentLessonId] = useState("1-3");
+  const [appState, setAppState] = useState<AppState>("welcome");
+  const [currentLessonId, setCurrentLessonId] = useState("1-1");
   const [currentTechnology, setCurrentTechnology] = useState("nodejs");
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [exitCode, setExitCode] = useState<number | undefined>();
+  const [currentCode, setCurrentCode] = useState("");
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const session = SessionManager.getSession();
+    if (session) {
+      setAppState("learning");
+      setCurrentTechnology(session.technology);
+      setCurrentLessonId(session.currentLessonId);
+    }
+  }, []);
+
+  // Clear session on browser refresh or close
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      SessionManager.clearSession();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  // Check for completion after each lesson
+  useEffect(() => {
+    if (appState === "learning" && SessionManager.isSessionComplete()) {
+      setAppState("completed");
+    }
+  }, [appState, currentLessonId]);
+
+  const handleStartSession = (technology: string) => {
+    // Get total lessons for the technology (simplified - you can enhance this)
+    const totalLessons = 5; // Adjust based on your actual lesson count per technology
+
+    SessionManager.startSession(technology, totalLessons);
+    setCurrentTechnology(technology);
+    setCurrentLessonId("1-1");
+    setAppState("learning");
+  };
+
+  const handleRestart = () => {
+    SessionManager.clearSession();
+    setAppState("welcome");
+    setCurrentLessonId("1-1");
+    setCurrentTechnology("nodejs");
+    setOutput("");
+    setError(undefined);
+    setExitCode(undefined);
+    setCurrentCode("");
+  };
 
   const handleLessonSelect = (lessonId: string) => {
     setCurrentLessonId(lessonId);
+    SessionManager.updateCurrentLesson(lessonId);
     // Clear output when switching lessons
     setOutput("");
     setError(undefined);
     setExitCode(undefined);
+    setCurrentCode(""); // Reset code editor
+  };
+
+  const handleCodeChange = (code: string) => {
+    setCurrentCode(code);
   };
 
   const handleRunCode = async (code: string, language: string) => {
@@ -71,6 +128,24 @@ export default function App() {
     setExitCode(undefined);
   };
 
+  // Render based on app state
+  if (appState === "welcome") {
+    return <WelcomeScreen onStart={handleStartSession} />;
+  }
+
+  if (appState === "completed") {
+    const session = SessionManager.getSession();
+    return (
+      <CompletionScreen
+        technology={currentTechnology}
+        completedLessons={session?.completedLessons.length || 0}
+        sessionDuration={SessionManager.getSessionDuration()}
+        onRestart={handleRestart}
+      />
+    );
+  }
+
+  // Learning state - show main app
   return (
     <div className="flex h-screen bg-white flex-col">
       {/* Header */}
@@ -88,44 +163,19 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
-          <ResizablePanelGroup direction="vertical">
-            {/* Lesson Content Section */}
-            <ResizablePanel defaultSize={45} minSize={30}>
-              <LessonContent
-                lessonId={currentLessonId}
-                currentTechnology={currentTechnology}
-              />
-            </ResizablePanel>
-
-            <ResizableHandle className="h-1 bg-slate-200 hover:bg-blue-400 transition-colors" />
-
-            {/* Code Editor and Output Section */}
-            <ResizablePanel defaultSize={55} minSize={30}>
-              <ResizablePanelGroup direction="horizontal">
-                {/* Code Editor */}
-                <ResizablePanel defaultSize={50} minSize={35}>
-                  <CodeEditor
-                    onRunCode={handleRunCode}
-                    currentTechnology={currentTechnology}
-                    currentLessonId={currentLessonId}
-                  />
-                </ResizablePanel>
-
-                <ResizableHandle className="w-1 bg-slate-200 hover:bg-blue-400 transition-colors" />
-
-                {/* Output Console */}
-                <ResizablePanel defaultSize={50} minSize={35}>
-                  <OutputConsole
-                    output={output}
-                    error={error}
-                    isRunning={isRunning}
-                    exitCode={exitCode}
-                  />
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+        <div className="flex-1">
+          <LessonContent
+            lessonId={currentLessonId}
+            currentTechnology={currentTechnology}
+            onRunCode={handleRunCode}
+            output={output}
+            error={error}
+            isRunning={isRunning}
+            exitCode={exitCode}
+            currentCode={currentCode}
+            onCodeChange={handleCodeChange}
+            onLessonSelect={handleLessonSelect}
+          />
         </div>
       </div>
     </div>

@@ -17,6 +17,8 @@ interface CodeEditorProps {
   onRunCode: (code: string, language: string) => void;
   currentTechnology?: string;
   currentLessonId?: string;
+  initialCode?: string; // External code to initialize with
+  onCodeChange?: (code: string) => void; // Callback when code changes
 }
 
 const starterCode: Record<string, string> = {
@@ -393,6 +395,8 @@ print "\\n✨ Ready to build with Perl!\\n";`,
 export function CodeEditor({
   onRunCode,
   currentTechnology = "nodejs",
+  initialCode,
+  onCodeChange,
 }: CodeEditorProps) {
   // Comprehensive mapping from technology to code editor language
   const getLanguageFromTech = (tech: string) => {
@@ -438,23 +442,35 @@ export function CodeEditor({
     getLanguageFromTech(currentTechnology)
   );
   const [code, setCode] = useState(
-    starterCode[getLanguageFromTech(currentTechnology)]
+    initialCode || starterCode[getLanguageFromTech(currentTechnology)]
   );
 
-  // Update language and code when technology changes
+  // Update language and code when technology changes or initialCode changes
   useEffect(() => {
     const newLanguage = getLanguageFromTech(currentTechnology);
     setLanguage(newLanguage);
-    setCode(starterCode[newLanguage]);
-  }, [currentTechnology]);
+    const newCode = initialCode || starterCode[newLanguage];
+    setCode(newCode);
+  }, [currentTechnology, initialCode]);
+
+  // Call onCodeChange when code changes
+  useEffect(() => {
+    if (onCodeChange) {
+      onCodeChange(code);
+    }
+  }, [code, onCodeChange]);
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
-    setCode(starterCode[newLanguage as keyof typeof starterCode] || "");
+    const newCode =
+      initialCode || starterCode[newLanguage as keyof typeof starterCode] || "";
+    setCode(newCode);
   };
 
   const handleReset = () => {
-    setCode(starterCode[language as keyof typeof starterCode] || "");
+    const resetCode =
+      initialCode || starterCode[language as keyof typeof starterCode] || "";
+    setCode(resetCode);
   };
 
   const handleRunCode = useCallback(() => {
