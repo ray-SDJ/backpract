@@ -171,31 +171,110 @@ export default function LessonContent({
 
   // Get previous lesson ID
   const getPreviousLessonId = (): string | null => {
-    // Parse current lesson ID (e.g., "2-1" -> module 2, lesson 1)
-    const [moduleNum, lessonNum] = lessonId.split("-").map(Number);
+    // Define lesson sequences for different technologies
+    const lessonSequences: Record<string, string[]> = {
+      java: [
+        "1-1",
+        "1-2",
+        "1-3",
+        "intro",
+        "mvc",
+        "data",
+        "security",
+        "testing",
+      ],
+      csharp: [
+        "1-1",
+        "1-2",
+        "1-3",
+        "intro",
+        "database",
+        "api",
+        "auth",
+        "testing",
+      ],
+      go: ["intro", "database", "api", "auth", "testing"],
+      php: ["intro", "database", "api", "auth", "testing"],
+      ruby: ["intro", "database", "api", "auth", "testing"],
+      rust: ["intro", "database", "api", "auth", "testing"],
+      typescript: ["intro", "database", "api", "auth", "testing"],
+      cpp: ["intro", "database", "api", "auth", "testing"],
+      python: [
+        "1-1",
+        "1-2",
+        "1-3",
+        "3-1",
+        "3-2",
+        "3-3",
+        "3-4",
+        "3-5",
+        "3-6",
+        "3-7",
+      ],
+      nodejs: ["1-1", "1-2", "1-3", "3-1", "3-2", "3-3", "4-1", "4-2", "4-3"],
+    };
 
-    // If we're at lesson 1, try to go to previous module's last lesson
-    if (lessonNum <= 1) {
-      return null; // Can't go back from first lesson
-    }
+    const sequence = lessonSequences[currentTechnology];
+    if (!sequence) return null;
 
-    // Go to previous lesson in same module
-    const previousInModule = `${moduleNum}-${lessonNum - 1}`;
-    return previousInModule;
+    const currentIndex = sequence.indexOf(lessonId);
+    if (currentIndex <= 0) return null;
+
+    return sequence[currentIndex - 1];
   };
 
   // Get next lesson ID
   const getNextLessonId = (): string | null => {
-    // Parse current lesson ID (e.g., "2-1" -> module 2, lesson 1)
-    const [moduleNum, lessonNum] = lessonId.split("-").map(Number);
+    // Define lesson sequences for different technologies
+    const lessonSequences: Record<string, string[]> = {
+      java: [
+        "1-1",
+        "1-2",
+        "1-3",
+        "intro",
+        "mvc",
+        "data",
+        "security",
+        "testing",
+      ],
+      csharp: [
+        "1-1",
+        "1-2",
+        "1-3",
+        "intro",
+        "database",
+        "api",
+        "auth",
+        "testing",
+      ],
+      go: ["intro", "database", "api", "auth", "testing"],
+      php: ["intro", "database", "api", "auth", "testing"],
+      ruby: ["intro", "database", "api", "auth", "testing"],
+      rust: ["intro", "database", "api", "auth", "testing"],
+      typescript: ["intro", "database", "api", "auth", "testing"],
+      cpp: ["intro", "database", "api", "auth", "testing"],
+      python: [
+        "1-1",
+        "1-2",
+        "1-3",
+        "3-1",
+        "3-2",
+        "3-3",
+        "3-4",
+        "3-5",
+        "3-6",
+        "3-7",
+      ],
+      nodejs: ["1-1", "1-2", "1-3", "3-1", "3-2", "3-3", "4-1", "4-2", "4-3"],
+    };
 
-    // Try next lesson in same module first
-    const nextInModule = `${moduleNum}-${lessonNum + 1}`;
+    const sequence = lessonSequences[currentTechnology];
+    if (!sequence) return null;
 
-    // Check if next lesson exists by trying to load it
-    // For now, we'll use a simple increment pattern
-    // You can enhance this by checking against the actual lesson registry
-    return nextInModule;
+    const currentIndex = sequence.indexOf(lessonId);
+    if (currentIndex === -1 || currentIndex >= sequence.length - 1) return null;
+
+    return sequence[currentIndex + 1];
   };
 
   // Handle previous lesson navigation

@@ -168,13 +168,123 @@ export function QuickTest({ children }: QuickTestProps) {
 }
 
 /**
- * LessonHTML - Component to render HTML content with proper styling
+ * LessonHTML - Component to render HTML or Markdown content with proper styling
  */
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+
 interface LessonHTMLProps {
   content: string;
 }
 
 export function LessonHTML({ content }: LessonHTMLProps) {
+  // Detect if content is Markdown (starts with # or has markdown patterns)
+  const isMarkdown =
+    content.trim().startsWith("#") ||
+    content.includes("```") ||
+    (!content.trim().startsWith("<") && !content.includes("<div"));
+
+  if (isMarkdown) {
+    return (
+      <div className="lesson-markdown-content prose prose-slate max-w-none">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeHighlight]}
+          components={{
+            // Custom component rendering for better styling
+            h1: ({ ...props }) => (
+              <h1 className="text-3xl font-bold mb-4 mt-6" {...props} />
+            ),
+            h2: ({ ...props }) => (
+              <h2 className="text-2xl font-bold mb-3 mt-5" {...props} />
+            ),
+            h3: ({ ...props }) => (
+              <h3 className="text-xl font-semibold mb-2 mt-4" {...props} />
+            ),
+            p: ({ ...props }) => (
+              <p className="mb-4 text-slate-700 leading-relaxed" {...props} />
+            ),
+            ul: ({ ...props }) => (
+              <ul className="list-disc list-inside mb-4 space-y-2" {...props} />
+            ),
+            ol: ({ ...props }) => (
+              <ol
+                className="list-decimal list-inside mb-4 space-y-2"
+                {...props}
+              />
+            ),
+            li: ({ ...props }) => (
+              <li className="text-slate-700 ml-4" {...props} />
+            ),
+            code: ({
+              inline,
+              className,
+              children,
+              ...props
+            }: React.HTMLProps<HTMLElement> & { inline?: boolean }) =>
+              inline ? (
+                <code
+                  className="bg-slate-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono"
+                  {...props}
+                >
+                  {children}
+                </code>
+              ) : (
+                <code className={`text-sm ${className || ""}`} {...props}>
+                  {children}
+                </code>
+              ),
+            pre: ({ ...props }) => (
+              <pre
+                className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto mb-4"
+                {...props}
+              />
+            ),
+            blockquote: ({ ...props }) => (
+              <blockquote
+                className="border-l-4 border-blue-500 pl-4 italic my-4 text-slate-600"
+                {...props}
+              />
+            ),
+            a: ({ ...props }) => (
+              <a
+                className="text-blue-600 hover:text-blue-800 underline"
+                {...props}
+              />
+            ),
+            table: ({ ...props }) => (
+              <div className="overflow-x-auto mb-4">
+                <table
+                  className="min-w-full divide-y divide-slate-200 border"
+                  {...props}
+                />
+              </div>
+            ),
+            thead: ({ ...props }) => (
+              <thead className="bg-slate-50" {...props} />
+            ),
+            th: ({ ...props }) => (
+              <th
+                className="px-4 py-2 text-left text-xs font-medium text-slate-700 uppercase tracking-wider border"
+                {...props}
+              />
+            ),
+            td: ({ ...props }) => (
+              <td
+                className="px-4 py-2 text-sm text-slate-700 border"
+                {...props}
+              />
+            ),
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      </div>
+    );
+  }
+
+  // Render HTML content
   return (
     <div
       className="lesson-html-content"
