@@ -15,8 +15,8 @@ export const IntroSection = {
         </h2>
         <p className="text-slate-700 mb-6">
           ASP.NET Core is a cross-platform framework for building web
-          applications and APIs. We'll create a secure user management API with
-          PostgreSQL integration.
+          applications and APIs. We&apos;ll create a secure user management API
+          with PostgreSQL integration.
         </p>
       </div>
 

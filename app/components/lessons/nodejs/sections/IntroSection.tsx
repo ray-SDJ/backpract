@@ -49,7 +49,7 @@ export const IntroSection = {
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg border border-slate-200">
           <h4 className="font-semibold text-slate-900 mb-3">
-            🔧 What You'll Learn
+            🔧 What You&apos;ll Learn
           </h4>
           <ul className="space-y-2 text-sm text-slate-700">
             <li className="flex items-start">

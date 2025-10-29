@@ -13,8 +13,8 @@ export const DatabaseSection = {
           🗄️ Master Laravel Database Operations
         </h3>
         <p className="text-green-800 leading-relaxed">
-          Learn Laravel's powerful Eloquent ORM for database operations. Create
-          migrations, define model relationships, and implement advanced
+          Learn Laravel&apos;s powerful Eloquent ORM for database operations.
+          Create migrations, define model relationships, and implement advanced
           querying techniques for robust data management.
         </p>
       </div>
@@ -79,9 +79,9 @@ export const DatabaseSection = {
               Learning Objective
             </h4>
             <p className="text-blue-700 text-sm leading-relaxed">
-              By the end of this section, you'll be able to design and implement
-              complex database schemas using Laravel migrations, create
-              efficient Eloquent models with relationships, and optimize
+              By the end of this section, you&apos;ll be able to design and
+              implement complex database schemas using Laravel migrations,
+              create efficient Eloquent models with relationships, and optimize
               database queries for performance.
             </p>
           </div>

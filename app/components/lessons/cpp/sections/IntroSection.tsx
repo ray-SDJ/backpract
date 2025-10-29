@@ -85,7 +85,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 // Include Crow header-only library
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/crow/include)
+include_directories(\${CMAKE_CURRENT_SOURCE_DIR}/crow/include)
 
 add_executable(crow_app main.cpp)
 

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Settings,
-  User,
-  BookOpen,
-  Code,
-  Trophy,
-  HelpCircle,
-} from "lucide-react";
+import { Code, Trophy, HelpCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
