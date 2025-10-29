@@ -441,15 +441,13 @@ export function CodeEditor({
   const [language, setLanguage] = useState(
     getLanguageFromTech(currentTechnology)
   );
-  const [code, setCode] = useState(
-    initialCode || starterCode[getLanguageFromTech(currentTechnology)]
-  );
+  const [code, setCode] = useState(initialCode || "");
 
   // Update language and code when technology changes or initialCode changes
   useEffect(() => {
     const newLanguage = getLanguageFromTech(currentTechnology);
     setLanguage(newLanguage);
-    const newCode = initialCode || starterCode[newLanguage];
+    const newCode = initialCode || "";
     setCode(newCode);
   }, [currentTechnology, initialCode]);
 
@@ -599,33 +597,6 @@ export function CodeEditor({
             onChange={(e) => setCode(e.target.value)}
             className="w-full h-full min-h-[400px] bg-transparent text-slate-100 font-mono text-sm resize-none focus:outline-none [&]:tab-2"
             spellCheck={false}
-            placeholder={`Write your ${
-              language === "javascript"
-                ? "Node.js/Express"
-                : language === "typescript"
-                ? "TypeScript"
-                : language === "python"
-                ? "Flask/Python"
-                : language === "java"
-                ? "Java/Spring Boot"
-                : language === "csharp" || language === "csharp-dotnet"
-                ? "C#/.NET"
-                : language === "cpp"
-                ? "C++"
-                : language === "go"
-                ? "Go"
-                : language === "rust"
-                ? "Rust"
-                : language === "php"
-                ? "PHP"
-                : language === "ruby"
-                ? "Ruby"
-                : language === "kotlin"
-                ? "Kotlin"
-                : language === "swift"
-                ? "Swift"
-                : language.charAt(0).toUpperCase() + language.slice(1)
-            } code here...\n\n✨ Code executes with Piston engine!\n🔍 Click "Test" for a Hello World example\n⚡ Press Ctrl+Enter to run your code`}
             aria-label="Code editor"
           />
         </div>

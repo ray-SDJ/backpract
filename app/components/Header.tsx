@@ -153,26 +153,6 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
             <span className="text-sm">Help</span>
           </Button>
         </HelpModal>{" "}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <User className="w-4 h-4" />
-              <span className="text-sm">Account</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <BookOpen className="w-4 h-4 mr-2" />
-              Learning Path
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   );
