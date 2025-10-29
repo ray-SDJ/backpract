@@ -55,6 +55,33 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
+      id: "2",
+      title: "Express.js Development",
+      lessons: [
+        {
+          id: "2-1",
+          title: "Getting Started with Express",
+          duration: "20 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "2-2",
+          title: "Building Your First API",
+          duration: "25 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "2-3",
+          title: "Express Routing & Middleware",
+          duration: "30 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
       id: "3",
       title: "Database Integration",
       lessons: [
@@ -63,48 +90,14 @@ const technologyModules: Record<string, Module[]> = {
           title: "MongoDB with Mongoose",
           duration: "25 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "3-2",
           title: "CRUD Operations",
           duration: "30 min",
           completed: false,
-          locked: true,
-        },
-        {
-          id: "3-3",
-          title: "Database Relations",
-          duration: "28 min",
-          completed: false,
-          locked: true,
-        },
-      ],
-    },
-    {
-      id: "4",
-      title: "Authentication & Security",
-      lessons: [
-        {
-          id: "4-1",
-          title: "JWT Authentication",
-          duration: "30 min",
-          completed: false,
-          locked: true,
-        },
-        {
-          id: "4-2",
-          title: "Passport.js Integration",
-          duration: "25 min",
-          completed: false,
-          locked: true,
-        },
-        {
-          id: "4-3",
-          title: "API Security Best Practices",
-          duration: "28 min",
-          completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -162,14 +155,14 @@ const technologyModules: Record<string, Module[]> = {
           title: "Flask Forms & Validation",
           duration: "28 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "3-4",
           title: "Flask Database Integration",
           duration: "30 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -182,21 +175,21 @@ const technologyModules: Record<string, Module[]> = {
           title: "Flask Blueprints",
           duration: "25 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "3-6",
           title: "Flask Testing",
           duration: "30 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "3-7",
           title: "Deployment with Gunicorn",
           duration: "28 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -254,7 +247,7 @@ const technologyModules: Record<string, Module[]> = {
           title: "Spring Data JPA",
           duration: "35 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -267,14 +260,14 @@ const technologyModules: Record<string, Module[]> = {
           title: "Spring Security & JWT",
           duration: "40 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "testing",
           title: "Testing & Production",
           duration: "35 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -332,7 +325,7 @@ const technologyModules: Record<string, Module[]> = {
           title: "ASP.NET Web API & Controllers",
           duration: "35 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -345,14 +338,14 @@ const technologyModules: Record<string, Module[]> = {
           title: "JWT Authentication & Security",
           duration: "40 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "testing",
           title: "Testing & Production Deployment",
           duration: "35 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -636,26 +629,17 @@ const applyDynamicLessonStates = (
 ): Module[] => {
   return modules.map((module) => ({
     ...module,
-    lessons: module.lessons.map((lesson, lessonIndex, allLessons) => {
+    lessons: module.lessons.map((lesson) => {
+      // Only check if lesson was completed by the user
       const completed = ValidationService.isLessonCompleted(
         lesson.id,
         technology
       );
 
-      // First lesson is always unlocked, subsequent lessons require previous lesson completion
-      let locked = false;
-      if (lessonIndex > 0) {
-        const previousLesson = allLessons[lessonIndex - 1];
-        locked = !ValidationService.isLessonCompleted(
-          previousLesson.id,
-          technology
-        );
-      }
-
       return {
         ...lesson,
         completed,
-        locked,
+        locked: false, // All lessons are always unlocked
       };
     }),
   }));
@@ -720,21 +704,21 @@ const getModulesForTechnology = (technology: string): Module[] => {
           title: "Database Integration",
           duration: "30 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "8-5",
           title: "Authentication",
           duration: "25 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "8-6",
           title: "Production Deployment",
           duration: "35 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -765,7 +749,7 @@ const getModulesForTechnology = (technology: string): Module[] => {
           title: "REST API Fundamentals",
           duration: "20 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -778,21 +762,21 @@ const getModulesForTechnology = (technology: string): Module[] => {
           title: `Getting Started with ${techName}`,
           duration: "15 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "2-2",
           title: "Basic Server Setup",
           duration: "20 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "2-3",
           title: "Routing & Middleware",
           duration: "25 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
@@ -805,21 +789,21 @@ const getModulesForTechnology = (technology: string): Module[] => {
           title: "Database Integration",
           duration: "30 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "3-2",
           title: "Authentication",
           duration: "25 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
         {
           id: "3-3",
           title: "Testing & Deployment",
           duration: "35 min",
           completed: false,
-          locked: true,
+          locked: false,
         },
       ],
     },
