@@ -193,6 +193,19 @@ const technologyModules: Record<string, Module[]> = {
         },
       ],
     },
+    {
+      id: "4",
+      title: "Data Structures & Algorithms",
+      lessons: [
+        {
+          id: "dsa",
+          title: "Python DSA Fundamentals",
+          duration: "45 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
   ],
 
   // Java/Spring Boot lessons
@@ -271,6 +284,19 @@ const technologyModules: Record<string, Module[]> = {
         },
       ],
     },
+    {
+      id: "4",
+      title: "Data Structures & Algorithms",
+      lessons: [
+        {
+          id: "dsa",
+          title: "Java DSA Fundamentals",
+          duration: "45 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
   ],
 
   // C# lessons
@@ -344,6 +370,19 @@ const technologyModules: Record<string, Module[]> = {
           id: "testing",
           title: "Testing & Production Deployment",
           duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "4",
+      title: "Data Structures & Algorithms",
+      lessons: [
+        {
+          id: "dsa",
+          title: "C# DSA Fundamentals",
+          duration: "45 min",
           completed: false,
           locked: false,
         },

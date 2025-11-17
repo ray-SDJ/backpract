@@ -17,7 +17,7 @@ export async function compareCodeWithSolution(
   lessonSolution: string
 ): Promise<ComparisonResult> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `This is the answer to this lesson: ${lessonSolution} and this is the answer the user gave: ${userInput} compare and contrast the two see what the user got wrong and explain to him why he got it wrong`;
 

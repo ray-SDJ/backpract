@@ -1,8 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
+// Simple in-memory rate limiter
+const rateLimiter = new Map<string, number[]>();
+const MAX_REQUESTS_PER_MINUTE = 10; // Set below the 15 limit to be safe
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const userRequests = rateLimiter.get(identifier) || [];
+
+  // Remove requests older than 1 minute
+  const recentRequests = userRequests.filter((time) => now - time < 60000);
+
+  if (recentRequests.length >= MAX_REQUESTS_PER_MINUTE) {
+    return false; // Rate limit exceeded
+  }
+
+  recentRequests.push(now);
+  rateLimiter.set(identifier, recentRequests);
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit (using IP or a session identifier)
+    const identifier = request.headers.get("x-forwarded-for") || "global";
+
+    if (!checkRateLimit(identifier)) {
+      return NextResponse.json(
+        {
+          error:
+            "Rate limit exceeded. Please wait a moment before trying again.",
+          retryAfter: 60,
+        },
+        { status: 429 }
+      );
+    }
+
     const { userInput, lessonSolution } = await request.json();
 
     if (!userInput || !lessonSolution) {
@@ -27,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Generate content using Gemini
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "models/gemini-1.5-flash", // Full model path for v1beta API
       contents: prompt,
     });
 
@@ -39,6 +73,19 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in compare-code API:", error);
+
+    // Check if it's a quota error
+    if (error instanceof Error && error.message.includes("quota")) {
+      return NextResponse.json(
+        {
+          error:
+            "AI service is temporarily unavailable due to high usage. Please try again in a minute.",
+          isQuotaError: true,
+        },
+        { status: 429 }
+      );
+    }
+
     return NextResponse.json(
       {
         error:
