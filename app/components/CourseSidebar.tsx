@@ -101,6 +101,32 @@ const technologyModules: Record<string, Module[]> = {
         },
       ],
     },
+    {
+      id: "4",
+      title: "Error & Exception Handling",
+      lessons: [
+        {
+          id: "errors",
+          title: "Node.js Error Handling",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "5",
+      title: "Reference & Cheat Sheets",
+      lessons: [
+        {
+          id: "cheatsheet",
+          title: "Node.js Complete Cheat Sheet",
+          duration: "Reference",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
   ],
 
   // Python/Flask lessons
@@ -206,6 +232,32 @@ const technologyModules: Record<string, Module[]> = {
         },
       ],
     },
+    {
+      id: "5",
+      title: "Error & Exception Handling",
+      lessons: [
+        {
+          id: "errors",
+          title: "Python Exception Handling",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "6",
+      title: "Reference & Cheat Sheets",
+      lessons: [
+        {
+          id: "cheatsheet",
+          title: "Python Complete Cheat Sheet",
+          duration: "Reference",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
   ],
 
   // Java/Spring Boot lessons
@@ -297,6 +349,32 @@ const technologyModules: Record<string, Module[]> = {
         },
       ],
     },
+    {
+      id: "5",
+      title: "Error & Exception Handling",
+      lessons: [
+        {
+          id: "errors",
+          title: "Java Exception Handling",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "6",
+      title: "Reference & Cheat Sheets",
+      lessons: [
+        {
+          id: "cheatsheet",
+          title: "Java Complete Cheat Sheet",
+          duration: "Reference",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
   ],
 
   // C# lessons
@@ -383,6 +461,32 @@ const technologyModules: Record<string, Module[]> = {
           id: "dsa",
           title: "C# DSA Fundamentals",
           duration: "45 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "5",
+      title: "Error & Exception Handling",
+      lessons: [
+        {
+          id: "errors",
+          title: "C# Exception Handling",
+          duration: "38 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "6",
+      title: "Reference & Cheat Sheets",
+      lessons: [
+        {
+          id: "cheatsheet",
+          title: "C# Complete Cheat Sheet",
+          duration: "Reference",
           completed: false,
           locked: false,
         },
@@ -608,6 +712,91 @@ const technologyModules: Record<string, Module[]> = {
           id: "testing",
           title: "Jest Testing & Production Deployment",
           duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+  ],
+
+  // Next.js lessons
+  nextjs: [
+    {
+      id: "1",
+      title: "Backend Development Basics",
+      lessons: [
+        {
+          id: "1-1",
+          title: "What is Backend Development?",
+          duration: "10 min",
+          completed: true,
+          locked: false,
+        },
+        {
+          id: "1-2",
+          title: "HTTP Basics",
+          duration: "15 min",
+          completed: true,
+          locked: false,
+        },
+        {
+          id: "1-3",
+          title: "REST API Fundamentals",
+          duration: "20 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: "Next.js App Router & API Routes",
+      lessons: [
+        {
+          id: "intro",
+          title: "Next.js Setup & Project Structure",
+          duration: "25 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "api",
+          title: "API Routes & Route Handlers",
+          duration: "30 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "database",
+          title: "Database Integration with Prisma",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "3",
+      title: "Advanced Next.js Backend",
+      lessons: [
+        {
+          id: "auth",
+          title: "Authentication with NextAuth.js",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "serveractions",
+          title: "Server Actions & Mutations",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "deployment",
+          title: "Deployment & Production Best Practices",
+          duration: "30 min",
           completed: false,
           locked: false,
         },

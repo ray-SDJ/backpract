@@ -61,6 +61,9 @@ export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
   react: "javascript",
   vue: "javascript",
   angular: "javascript",
+  nextjs: "typescript",
+  next: "typescript",
+  "next.js": "typescript",
   typescript: "typescript",
   ts: "typescript",
 

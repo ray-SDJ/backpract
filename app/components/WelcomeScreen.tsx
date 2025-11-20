@@ -58,6 +58,12 @@ const technologies = [
     description: "Rapid web app development",
     icon: "💎",
   },
+  {
+    id: "nextjs",
+    name: "Next.js & React",
+    description: "Full-stack React framework",
+    icon: "⚡",
+  },
 ];
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
