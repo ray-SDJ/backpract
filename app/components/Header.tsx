@@ -88,23 +88,31 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
     technologies.find((t) => t.id === currentTechnology) || technologies[0];
 
   return (
-    <header className="h-14 border-b bg-white flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Code className="w-6 h-6 text-blue-600" />
-          <h1 className="text-xl font-semibold">Backend Practice</h1>
-          <Badge variant="secondary" className="text-xs">
+    <header className="h-14 border-b bg-white flex items-center justify-between px-3 md:px-6 flex-shrink-0">
+      <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1 md:gap-2">
+          <Code className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+          <h1 className="text-base md:text-xl font-semibold hidden sm:block">
+            Backend Practice
+          </h1>
+          <h1 className="text-base md:text-xl font-semibold sm:hidden">
+            BackPract
+          </h1>
+          <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
             v1.0
           </Badge>
         </div>
 
-        <div className="h-6 w-px bg-slate-300" />
+        <div className="h-6 w-px bg-slate-300 hidden sm:block" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2">
-              <span className="text-lg">{currentTech.icon}</span>
-              <span>{currentTech.name}</span>
+            <Button
+              variant="ghost"
+              className="gap-1 md:gap-2 text-sm md:text-base"
+            >
+              <span className="text-base md:text-lg">{currentTech.icon}</span>
+              <span className="hidden sm:inline">{currentTech.name}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
@@ -133,17 +141,17 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
         </DropdownMenu>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 md:gap-2">
         <ProgressModal>
-          <Button variant="ghost" size="sm" className="gap-2">
+          <Button variant="ghost" size="sm" className="gap-1 md:gap-2">
             <Trophy className="w-4 h-4" />
-            <span className="text-sm">Progress</span>
+            <span className="text-sm hidden sm:inline">Progress</span>
           </Button>
         </ProgressModal>
         <HelpModal>
-          <Button variant="ghost" size="sm" className="gap-2">
+          <Button variant="ghost" size="sm" className="gap-1 md:gap-2">
             <HelpCircle className="w-4 h-4" />
-            <span className="text-sm">Help</span>
+            <span className="text-sm hidden sm:inline">Help</span>
           </Button>
         </HelpModal>{" "}
       </div>

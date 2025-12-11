@@ -408,6 +408,117 @@ curl -X DELETE http://localhost:3000/api/users/123</code></pre>
             </ol>
             <p class="text-yellow-800 mt-3">Each book should have: id, title, author, year, genre, pages</p>
           </div>
+
+          <div class="lesson-section mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              🎯 Practice: Consuming External APIs
+            </h2>
+            <p class="text-gray-700 mb-4">
+              Now let's practice making HTTP requests to an external API using fetch(). We have a Countries API running at 
+              <code class="bg-gray-100 px-2 py-1 rounded">http://localhost:3000/api</code> with the following endpoints:
+            </p>
+
+            <div class="explanation-box bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <h4 class="font-semibold text-green-900 mb-3">📡 Available Endpoints</h4>
+              <ul class="explanation-list space-y-2">
+                <li><strong>GET /api/countries</strong> - Get all countries</li>
+                <li><strong>GET /api/countries?continent=Asia</strong> - Filter by continent</li>
+                <li><strong>GET /api/cities?countryId=3</strong> - Get cities for country ID 3 (Japan)</li>
+                <li><strong>GET /api/cities?isCapital=true</strong> - Get only capital cities</li>
+                <li><strong>GET /api/languages?minSpeakers=100000000</strong> - Languages with 100M+ speakers</li>
+              </ul>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Practice Task 1: Fetch All Countries</h3>
+            <p class="text-gray-700 mb-4">
+              Make a GET request to <code class="bg-gray-100 px-2 py-1 rounded">http://localhost:3000/api/countries</code> 
+              and display the name, capital, and population of each country.
+            </p>
+
+            <div class="code-block bg-gray-900 text-white p-4 rounded-lg mb-4 overflow-x-auto">
+              <pre><code>// Practice: Fetch all countries
+async function fetchCountries() {
+  try {
+    const response = await fetch('http://localhost:3000/api/countries');
+    const data = await response.json();
+    
+    console.log(\`Found \${data.count} countries:\\n\`);
+    
+    data.data.forEach(country => {
+      console.log(\`\${country.name} (\${country.code})\`);
+      console.log(\`  Capital: \${country.capital}\`);
+      console.log(\`  Population: \${country.population.toLocaleString()}\`);
+      console.log('');
+    });
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+fetchCountries();</code></pre>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Practice Task 2: Get Cities for Japan</h3>
+            <p class="text-gray-700 mb-4">
+              Make a request to get all cities in Japan (country ID: 3). Display each city name and whether it's a capital.
+            </p>
+
+            <div class="code-block bg-gray-900 text-white p-4 rounded-lg mb-4 overflow-x-auto">
+              <pre><code>// Practice: Get cities for Japan (ID: 3)
+async function fetchJapanCities() {
+  try {
+    const response = await fetch('http://localhost:3000/api/cities?countryId=3');
+    const data = await response.json();
+    
+    console.log('Cities in Japan:');
+    data.data.forEach(city => {
+      const capitalBadge = city.isCapital ? '👑 ' : '';
+      console.log(\`\${capitalBadge}\${city.name} - Population: \${city.population.toLocaleString()}\`);
+    });
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+fetchJapanCities();</code></pre>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Practice Task 3: Filter Countries by Continent</h3>
+            <p class="text-gray-700 mb-4">
+              Make a request to get all countries in Europe and display them sorted by population (highest first).
+            </p>
+
+            <div class="code-block bg-gray-900 text-white p-4 rounded-lg mb-4 overflow-x-auto">
+              <pre><code>// Practice: Get European countries sorted by population
+async function fetchEuropeanCountries() {
+  try {
+    const response = await fetch('http://localhost:3000/api/countries?continent=Europe');
+    const data = await response.json();
+    
+    // Sort by population descending
+    const sorted = data.data.sort((a, b) => b.population - a.population);
+    
+    console.log('European Countries (by population):\\n');
+    sorted.forEach((country, index) => {
+      console.log(\`\${index + 1}. \${country.name}: \${country.population.toLocaleString()}\`);
+    });
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+fetchEuropeanCountries();</code></pre>
+            </div>
+
+            <div class="explanation-box bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+              <h4 class="font-semibold text-purple-900 mb-3">💪 More Practice Tasks</h4>
+              <ul class="explanation-list space-y-2">
+                <li><strong>Task 4:</strong> Request all capital cities using <code>?isCapital=true</code></li>
+                <li><strong>Task 5:</strong> Get languages with at least 100M speakers using <code>?minSpeakers=100000000</code></li>
+                <li><strong>Challenge:</strong> Fetch all Asian countries, then for each country fetch its cities, and calculate the total population</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -918,6 +918,40 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
   ],
+
+  // SQL Database lessons
+  sql: [
+    {
+      id: "1",
+      title: "SQL Fundamentals",
+      lessons: [
+        {
+          id: "sql-basics",
+          title: "SQL Query Basics",
+          duration: "60 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+  ],
+
+  // MongoDB & NoSQL lessons
+  mongodb: [
+    {
+      id: "1",
+      title: "NoSQL & MongoDB",
+      lessons: [
+        {
+          id: "nosql-mongodb",
+          title: "MongoDB Fundamentals",
+          duration: "55 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+  ],
 };
 
 // Apply dynamic lesson states based on ValidationService
@@ -1147,6 +1181,8 @@ export function CourseSidebar({
       scala: "Scala Backend",
       haskell: "Haskell Web",
       ocaml: "OCaml Backend",
+      sql: "SQL Databases",
+      mongodb: "MongoDB & NoSQL",
     };
     return techNames[tech] || tech.charAt(0).toUpperCase() + tech.slice(1);
   };

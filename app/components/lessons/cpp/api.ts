@@ -165,12 +165,11 @@ int main() {
 }
 \`\`\``,
   practiceInstructions: [
-    "Implement UserController with CRUD operations",
-    "Add custom middleware for logging and API versioning",
-    "Test all endpoints with different HTTP methods",
-    "Add proper error handling and status codes",
-    "Implement request validation middleware",
-    "Add API documentation and health checks",
+    "Fetch all countries from http://localhost:3000/api/countries using libcurl",
+    "Fetch all cities for Japan (countryId=3) and display them",
+    "Filter countries by continent (Europe) and show results",
+    "Request all capital cities using ?isCapital=true",
+    "Get languages with at least 100M speakers using ?minSpeakers=100000000",
   ],
   hints: [
     "Use smart pointers for dependency injection",

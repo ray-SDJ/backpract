@@ -138,6 +138,117 @@ def bad_request(error):
         Test each endpoint using Postman or curl commands.
       </p>
     </div>
+
+    <h2>🎯 Practice: Making API Requests with Python</h2>
+    
+    <p>Now let's practice making HTTP requests to a real API! We have a Countries API with data about countries, cities, and languages.</p>
+
+    <div class="explanation-box bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <h4 class="font-semibold text-green-900 mb-3">📡 Available Endpoints</h4>
+      <ul class="explanation-list space-y-2">
+        <li><strong>GET http://localhost:3000/api/countries</strong> - Get all countries</li>
+        <li><strong>GET http://localhost:3000/api/countries?continent=Asia</strong> - Filter by continent</li>
+        <li><strong>GET http://localhost:3000/api/cities?countryId=7</strong> - Get cities for India (ID: 7)</li>
+        <li><strong>GET http://localhost:3000/api/cities?isCapital=true</strong> - Get capital cities only</li>
+        <li><strong>GET http://localhost:3000/api/languages?minSpeakers=100000000</strong> - Languages with 100M+ speakers</li>
+      </ul>
+    </div>
+
+    <h3>Practice Task 1: Fetch All Countries</h3>
+    <p>Use Python's <code>requests</code> library to fetch all countries and display their names and capitals.</p>
+
+    <pre class="code-block">
+      <code>
+import requests
+
+def fetch_all_countries():
+    """Practice: Fetch all countries from the API"""
+    url = 'http://localhost:3000/api/countries'
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        data = response.json()
+        print(f"Found {data['count']} countries:\\n")
+        
+        for country in data['data']:
+            print(f"{country['name']} ({country['code']})")
+            print(f"  Capital: {country['capital']}")
+            print(f"  Population: {country['population']:,}")
+            print()
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+
+# Run it
+fetch_all_countries()
+      </code>
+    </pre>
+
+    <h3>Practice Task 2: Get Cities in India</h3>
+    <p>Make a request to get all cities in India (country ID: 7). Display each city with its population.</p>
+
+    <pre class="code-block">
+      <code>
+def fetch_india_cities():
+    """Practice: Get all cities in India (ID: 7)"""
+    url = 'http://localhost:3000/api/cities'
+    params = {'countryId': 7}
+    
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        print("Cities in India:\\n")
+        
+        for city in data['data']:
+            capital_badge = '👑 ' if city['isCapital'] else '   '
+            print(f"{capital_badge}{city['name']}: {city['population']:,}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+
+fetch_india_cities()
+      </code>
+    </pre>
+
+    <h3>Practice Task 3: Find All Capital Cities</h3>
+    <p>Request all capital cities and display them with their countries.</p>
+
+    <pre class="code-block">
+      <code>
+def fetch_capital_cities():
+    """Practice: Get all capital cities"""
+    url = 'http://localhost:3000/api/cities'
+    params = {'isCapital': 'true'}
+    
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        print(f"Capital Cities ({data['count']}):\\n")
+        
+        for city in data['data']:
+            print(f"👑 {city['name']}, {city['country']}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+
+fetch_capital_cities()
+      </code>
+    </pre>
+
+    <div class="explanation-box bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+      <h4 class="font-semibold text-purple-900 mb-3">💪 More Practice Tasks</h4>
+      <ul class="explanation-list space-y-2">
+        <li><strong>Task 4:</strong> Get countries in South America using <code>?continent=South America</code></li>
+        <li><strong>Task 5:</strong> Get languages with 500M+ speakers using <code>?minSpeakers=500000000</code></li>
+        <li><strong>Challenge:</strong> Fetch all European countries, then for each get its cities, calculate total population, and find the 3 largest cities</li>
+      </ul>
+    </div>
   </div>`,
   objectives: [
     "Understand URL parameters and route variables",

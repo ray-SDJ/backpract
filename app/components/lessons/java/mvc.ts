@@ -183,6 +183,170 @@ curl http://localhost:8080/api/users
 curl "http://localhost:8080/api/users?page=0&size=5"
       </code>
     </pre>
+
+    <h2>🎯 Practice: Consuming APIs with Java HttpClient</h2>
+    
+    <p>Now let's practice making HTTP requests to an external API using Java's modern HttpClient. We have a Countries API with real data you can fetch!</p>
+
+    <div class="explanation-box bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <h4 class="font-semibold text-green-900 mb-3">📡 Available Endpoints</h4>
+      <ul class="explanation-list space-y-2">
+        <li><strong>GET http://localhost:3000/api/countries</strong> - Get all countries</li>
+        <li><strong>GET http://localhost:3000/api/countries?continent=Asia</strong> - Filter by continent</li>
+        <li><strong>GET http://localhost:3000/api/cities?countryId=8</strong> - Get cities for China (ID: 8)</li>
+        <li><strong>GET http://localhost:3000/api/cities?isCapital=true</strong> - Get capital cities</li>
+        <li><strong>GET http://localhost:3000/api/languages?minSpeakers=100000000</strong> - Popular languages</li>
+      </ul>
+    </div>
+
+    <h3>Practice Task 1: Fetch All Countries</h3>
+    <p>Use HttpClient to fetch all countries and display their information.</p>
+
+    <pre class="code-block">
+      <code>
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+
+public class CountriesClient {
+    private static final String BASE_URL = "http://localhost:3000/api";
+    
+    public static void fetchAllCountries() {
+        HttpClient client = HttpClient.newHttpClient();
+        Gson gson = new Gson();
+        
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/countries"))
+                .GET()
+                .build();
+            
+            HttpResponse&lt;String&gt; response = client.send(
+                request, 
+                HttpResponse.BodyHandlers.ofString()
+            );
+            
+            JsonObject data = gson.fromJson(response.body(), JsonObject.class);
+            JsonArray countries = data.getAsJsonArray("data");
+            
+            System.out.println("Found " + countries.size() + " countries\\n");
+            
+            countries.forEach(element -> {
+                JsonObject country = element.getAsJsonObject();
+                System.out.println(country.get("name").getAsString() + 
+                                 " (" + country.get("code").getAsString() + ")");
+                System.out.println("  Capital: " + country.get("capital").getAsString());
+                System.out.printf("  Population: %,d%n", 
+                                country.get("population").getAsLong());
+                System.out.println();
+            });
+            
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+    
+    public static void main(String[] args) {
+        fetchAllCountries();
+    }
+}
+      </code>
+    </pre>
+
+    <h3>Practice Task 2: Get Cities in China</h3>
+    <p>Make a request to get all cities in China (country ID: 8). Display each city with population.</p>
+
+    <pre class="code-block">
+      <code>
+public static void fetchChinaCities() {
+    HttpClient client = HttpClient.newHttpClient();
+    Gson gson = new Gson();
+    
+    try {
+        String url = BASE_URL + "/cities?countryId=8";
+        
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+        
+        HttpResponse&lt;String&gt; response = client.send(
+            request, 
+            HttpResponse.BodyHandlers.ofString()
+        );
+        
+        JsonObject data = gson.fromJson(response.body(), JsonObject.class);
+        JsonArray cities = data.getAsJsonArray("data");
+        
+        System.out.println("Cities in China:\\n");
+        cities.forEach(element -> {
+            JsonObject city = element.getAsJsonObject();
+            String badge = city.get("isCapital").getAsBoolean() ? "👑 " : "   ";
+            System.out.printf("%s%s: %,d%n",
+                            badge,
+                            city.get("name").getAsString(),
+                            city.get("population").getAsLong());
+        });
+        
+    } catch (Exception e) {
+        System.err.println("Error: " + e.getMessage());
+    }
+}
+      </code>
+    </pre>
+
+    <h3>Practice Task 3: Find All Capital Cities</h3>
+    <p>Request all capital cities and display them with their countries.</p>
+
+    <pre class="code-block">
+      <code>
+public static void fetchCapitalCities() {
+    HttpClient client = HttpClient.newHttpClient();
+    Gson gson = new Gson();
+    
+    try {
+        String url = BASE_URL + "/cities?isCapital=true";
+        
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+        
+        HttpResponse&lt;String&gt; response = client.send(
+            request, 
+            HttpResponse.BodyHandlers.ofString()
+        );
+        
+        JsonObject data = gson.fromJson(response.body(), JsonObject.class);
+        JsonArray cities = data.getAsJsonArray("data");
+        
+        System.out.println("Capital Cities (" + cities.size() + "):\\n");
+        cities.forEach(element -> {
+            JsonObject city = element.getAsJsonObject();
+            System.out.printf("👑 %s, %s%n",
+                            city.get("name").getAsString(),
+                            city.get("country").getAsString());
+        });
+        
+    } catch (Exception e) {
+        System.err.println("Error: " + e.getMessage());
+    }
+}
+      </code>
+    </pre>
+
+    <div class="explanation-box bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+      <h4 class="font-semibold text-purple-900 mb-3">💪 More Practice Tasks</h4>
+      <ul class="explanation-list space-y-2">
+        <li><strong>Task 4:</strong> Get countries in Africa using <code>?continent=Africa</code></li>
+        <li><strong>Task 5:</strong> Get languages with 200M+ speakers using <code>?minSpeakers=200000000</code></li>
+        <li><strong>Challenge:</strong> Fetch all North American countries, get their cities and languages, calculate total population, and list unique languages</li>
+      </ul>
+    </div>
   </div>`,
   objectives: [
     "Build comprehensive REST APIs with full CRUD operations",

@@ -276,14 +276,59 @@ html {
   /* Responsive Design */
   @media (max-width: 768px) {
     .lesson-content {
-      @apply px-4;
+      @apply px-2;
     }
 
     .lesson-content h2 {
-      @apply text-lg;
+      @apply text-lg mt-6;
+    }
+
+    .lesson-content h3 {
+      @apply text-base mt-4;
+    }
+
+    .lesson-content p {
+      @apply text-sm;
     }
 
     .lesson-content pre {
+      @apply text-xs p-3;
+    }
+
+    .lesson-content ul,
+    .lesson-content ol {
+      @apply text-sm;
+    }
+  }
+
+  /* Small mobile devices */
+  @media (max-width: 480px) {
+    .lesson-content h2 {
+      @apply text-base;
+    }
+
+    .lesson-content pre {
+      @apply text-[10px] p-2;
+    }
+  }
+
+  /* Ensure code blocks don't break layout on mobile */
+  .lesson-content pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Make tables responsive */
+  .lesson-content table {
+    @apply w-full text-sm;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @media (max-width: 768px) {
+    .lesson-content table {
       @apply text-xs;
     }
   }

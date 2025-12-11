@@ -496,3 +496,5 @@ export async function DELETE(
   return NextResponse.json({ message: 'Task deleted successfully' });
 }`,
 };
+
+export default lessonData;
