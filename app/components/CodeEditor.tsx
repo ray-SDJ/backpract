@@ -152,7 +152,7 @@ export function CodeEditor({
   // Notify parent of code changes
   useEffect(() => {
     onCodeChange?.(code);
-  }, [code, onCodeChange]);
+  }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle code execution
   const handleRun = useCallback(() => {
