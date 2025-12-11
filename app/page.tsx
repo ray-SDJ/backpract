@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "./components/Header";
 import { CourseSidebar } from "./components/CourseSidebar";
 import LessonContent from "./components/LessonContent";
@@ -55,7 +55,7 @@ export default function App() {
     }
   }, [appState, currentLessonId]);
 
-  const handleStartSession = (technology: string) => {
+  const handleStartSession = useCallback((technology: string) => {
     // Get total lessons for the technology (simplified - you can enhance this)
     const totalLessons = 5; // Adjust based on your actual lesson count per technology
 
@@ -63,9 +63,9 @@ export default function App() {
     setCurrentTechnology(technology);
     setCurrentLessonId("1-1");
     setAppState("learning");
-  };
+  }, []);
 
-  const handleRestart = () => {
+  const handleRestart = useCallback(() => {
     SessionManager.clearSession();
     setAppState("welcome");
     setCurrentLessonId("1-1");
@@ -74,9 +74,9 @@ export default function App() {
     setError(undefined);
     setExitCode(undefined);
     setCurrentCode("");
-  };
+  }, []);
 
-  const handleLessonSelect = (lessonId: string) => {
+  const handleLessonSelect = useCallback((lessonId: string) => {
     setCurrentLessonId(lessonId);
     SessionManager.updateCurrentLesson(lessonId);
     setIsSidebarOpen(false); // Close mobile sidebar when lesson is selected
@@ -85,13 +85,13 @@ export default function App() {
     setError(undefined);
     setExitCode(undefined);
     setCurrentCode(""); // Reset code editor
-  };
+  }, []);
 
-  const handleCodeChange = (code: string) => {
+  const handleCodeChange = useCallback((code: string) => {
     setCurrentCode(code);
-  };
+  }, []);
 
-  const handleRunCode = async (code: string, language: string) => {
+  const handleRunCode = useCallback(async (code: string, language: string) => {
     console.log("🚀 Running code:", {
       code: code.substring(0, 100) + "...",
       language,
@@ -122,16 +122,16 @@ export default function App() {
     } finally {
       setIsRunning(false);
     }
-  };
+  }, []);
 
-  const handleTechnologyChange = (technology: string) => {
+  const handleTechnologyChange = useCallback((technology: string) => {
     setCurrentTechnology(technology);
     // Reset lesson when switching technologies
     setCurrentLessonId("1-1");
     setOutput("");
     setError(undefined);
     setExitCode(undefined);
-  };
+  }, []);
 
   // Render based on app state
   if (appState === "welcome") {
