@@ -51,45 +51,103 @@ def get_comment(post_id, comment_id):
 
     <pre class="code-block">
       <code>
+# Import necessary Flask components
 from flask import Flask, request, jsonify
 
+# Flask = main application class
+# request = global object containing incoming request data
+# jsonify = converts Python dict to JSON response with correct headers
+
+# Create Flask application
 app = Flask(__name__)
 
-# CREATE - Add new resource
+# ========== CREATE - Add new resource ==========
+# @app.route() decorator with methods parameter
+# methods=['POST'] means this route ONLY accepts POST requests
 @app.route('/api/users', methods=['POST'])
 def create_user():
+    # request.get_json() extracts JSON data from request body
+    # It automatically parses JSON string into Python dictionary
+    # Example request body: {"username": "john", "email": "john@example.com"}
     data = request.get_json()
-    # Validate and save user
+    
+    # In real application: validate data, check if user exists, save to database
+    # For demo: create dictionary with user data
     new_user = {
-        'id': 123,
-        'username': data['username'],
-        'email': data['email']
+        'id': 123,                    # Would come from database after insert
+        'username': data['username'], # Extract username from request
+        'email': data['email']        # Extract email from request
     }
-    return jsonify(new_user), 201  # 201 = Created
+    
+    # jsonify() converts dict to JSON response and sets Content-Type header
+    # 201 = HTTP status "Created" (correct status for POST that creates resource)
+    return jsonify(new_user), 201
 
-# READ - Get resources  
+# ========== READ - Get resources ==========
+# Same route path as create_user, but different HTTP method (GET vs POST)
+# Flask distinguishes routes by BOTH path AND method
 @app.route('/api/users', methods=['GET'])
 def get_users():
+    # request.args = dictionary-like object containing query parameters
+    # Query params come after ? in URL: /api/users?page=2&limit=10
+    # .get('page', 1, type=int) means:
+    #   - Get 'page' parameter
+    #   - Default to 1 if not provided
+    #   - Convert to int type (prevents string/injection issues)
     page = request.args.get('page', 1, type=int)
+    
+    # In real app: query database with pagination
+    # For demo: return mock data
     return jsonify({
-        'users': [{'id': 1, 'username': 'john'}],
+        'users': [{'id': 1, 'username': 'john'}],  # Would be real data from DB
         'page': page
-    }), 200
+    }), 200  # 200 = OK/Success
 
-# UPDATE - Modify existing resource
+# ========== UPDATE - Modify existing resource ==========
+# &lt;int:user_id&gt; is a URL parameter (dynamic segment)
+# int: ensures parameter is an integer (Flask validates this)
+# Example URLs: /api/users/5, /api/users/123
+# user_id parameter is passed to function automatically
 @app.route('/api/users/&lt;int:user_id&gt;', methods=['PUT'])
 def update_user(user_id):
+    # user_id comes from URL, data comes from request body
+    # PUT typically replaces entire resource
     data = request.get_json()
-    # Update user in database
+    
+    # In real app: 
+    # 1. Check if user with user_id exists (return 404 if not)
+    # 2. Update user in database with new data
+    # 3. Return updated user
+    
+    # For demo: return success response
     return jsonify({'id': user_id, 'updated': True}), 200
 
-# DELETE - Remove resource
+# ========== DELETE - Remove resource ==========
 @app.route('/api/users/&lt;int:user_id&gt;', methods=['DELETE'])
 def delete_user(user_id):
-    # Delete user from database
-    return '', 204  # 204 = No Content
+    # user_id identifies which user to delete
+    
+    # In real app:
+    # 1. Verify user exists (return 404 if not)
+    # 2. Check permissions (can this user delete?)
+    # 3. Delete from database
+    
+    # For DELETE, two common responses:
+    # 1. 204 No Content (success, no response body) - used here
+    # 2. 200 OK with message (success with confirmation)
+    return '', 204  # Empty string + 204 status = no content response
       </code>
     </pre>
+    
+    <div class="explanation-box bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <h4 class="font-semibold text-green-900 mb-3">💡 CRUD Mapping</h4>
+      <ul class="explanation-list space-y-2">
+        <li><strong>POST /api/users:</strong> CREATE - request.get_json() for body data, return 201</li>
+        <li><strong>GET /api/users:</strong> READ all - request.args for query params (?page=1), return 200</li>
+        <li><strong>PUT /api/users/&lt;id&gt;:</strong> UPDATE - &lt;int:id&gt; from URL + request.get_json() for body, return 200</li>
+        <li><strong>DELETE /api/users/&lt;id&gt;:</strong> DELETE - &lt;int:id&gt; from URL, return 204 (no content)</li>
+      </ul>
+    </div>
 
     <div class="explanation-box bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
       <h4 class="font-semibold text-blue-900 mb-3">💡 Code Explanation</h4>

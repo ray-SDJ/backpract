@@ -62,41 +62,91 @@ npm install mongoose
           
           <div class="code-block bg-gray-900 text-white p-4 rounded-lg mb-4 overflow-x-auto">
             <pre><code>// config/database.js - Database connection setup
+
+// Import Mongoose ODM (Object Document Mapper)
+// Mongoose provides schema-based solution to model MongoDB data
 const mongoose = require('mongoose');
 
+// connectDB is an async function because database connections are asynchronous
+// async allows us to use await inside the function
 const connectDB = async () => {
+  // try-catch block handles potential connection errors
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myapp', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // mongoose.connect() returns a Promise
+    // await pauses execution until Promise resolves or rejects
+    // process.env.MONGODB_URI comes from .env file (for security)
+    // || means "or" - uses localhost if MONGODB_URI not defined (fallback)
+    const conn = await mongoose.connect(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/myapp',
+      {
+        // useNewUrlParser: true - uses MongoDB's new URL parser
+        useNewUrlParser: true,
+        // useUnifiedTopology: true - uses new Server Discovery and Monitoring engine
+        useUnifiedTopology: true,
+      }
+    );
 
+    // conn.connection.host contains the MongoDB server address
+    // Template literal (\`\`) allows embedding variables with \${}
     console.log(\`📊 MongoDB Connected: \${conn.connection.host}\`);
     
-    // Connection event listeners
+    // ========== CONNECTION EVENT LISTENERS ==========
+    // Event listeners monitor connection status changes
+    
+    // 'error' event fires when connection has an error AFTER initial connection
     mongoose.connection.on('error', (err) => {
       console.error('MongoDB connection error:', err);
     });
 
+    // 'disconnected' event fires when connection to MongoDB is lost
     mongoose.connection.on('disconnected', () => {
       console.log('MongoDB disconnected');
     });
 
+    // Return connection object for further use
     return conn;
+    
   } catch (error) {
+    // Catch block executes if connection fails
     console.error('Database connection failed:', error);
+    
+    // process.exit(1) terminates the Node.js process
+    // 1 = exit with error code (0 would mean success)
+    // App can't function without database, so we exit
     process.exit(1);
   }
 };
 
-// Graceful shutdown
+// ========== GRACEFUL SHUTDOWN ==========
+// Handle process termination signals to close DB connection cleanly
+
+// SIGINT = interrupt signal (Ctrl+C in terminal)
+// process.on() registers event listener for system signals
 process.on('SIGINT', async () => {
+  // await ensures connection closes before exiting
+  // Prevents data corruption and cleanly releases resources
   await mongoose.connection.close();
   console.log('MongoDB connection closed through app termination');
+  
+  // Exit with success code (0 = clean shutdown)
   process.exit(0);
 });
 
+// Export function so it can be used in other files
+// Usage: const connectDB = require('./config/database');
 module.exports = connectDB;</code></pre>
+          </div>
+          
+          <div class="explanation-box bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h4 class="font-semibold text-blue-900 mb-3">🔍 Key Concepts Explained</h4>
+            <ul class="explanation-list space-y-2">
+              <li><strong>async/await:</strong> Modern syntax for handling asynchronous operations (Promises)</li>
+              <li><strong>try-catch:</strong> Error handling - try contains code that might fail, catch handles errors</li>
+              <li><strong>mongoose.connect():</strong> Establishes connection to MongoDB database</li>
+              <li><strong>process.exit(1):</strong> Terminates Node.js process with error code</li>
+              <li><strong>Event listeners (.on()):</strong> Functions that run when specific events occur</li>
+              <li><strong>Graceful shutdown:</strong> Properly closing connections before app exits</li>
+            </ul>
           </div>
         </div>
 

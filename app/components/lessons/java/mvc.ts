@@ -36,67 +36,106 @@ public class UserDto {
     </pre>
 
     <h2>REST Controller with Validation</h2>
+    <p>Spring Boot controllers use annotations to map HTTP requests to methods. Let's break down each part:</p>
+
+    <div class="explanation-box bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <h4 class="font-semibold text-blue-900 mb-2">💡 Spring Annotations Explained</h4>
+      <ul class="text-sm text-blue-800 space-y-1 ml-4">
+        <li>• <strong>@RestController:</strong> Marks this class as a REST API controller</li>
+        <li>• <strong>@RequestMapping("/api/users"):</strong> Base URL for all methods</li>
+        <li>• <strong>@GetMapping:</strong> Handles HTTP GET requests</li>
+        <li>• <strong>@PostMapping:</strong> Handles HTTP POST requests (create)</li>
+        <li>• <strong>@PutMapping:</strong> Handles HTTP PUT requests (update)</li>
+        <li>• <strong>@DeleteMapping:</strong> Handles HTTP DELETE requests</li>
+      </ul>
+    </div>
     
     <pre class="code-block">
       <code>
+// @RestController combines @Controller and @ResponseBody
+// It tells Spring this class handles HTTP requests and returns JSON
 @RestController
+
+// Base URL path - all methods will start with /api/users
 @RequestMapping("/api/users")
+
+// @Validated enables validation on request parameters
 @Validated
+
+// @CrossOrigin allows requests from specified origins (CORS)
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
     
+    // In-memory storage for demonstration (use database in real apps)
     private final List<UserDto> users = new ArrayList<>();
-    private Long nextId = 1L;
+    private Long nextId = 1L;  // Auto-increment ID
     
-    // GET /api/users - Get all users with pagination
-    @GetMapping
+    // GET /api/users - Retrieve all users with optional filtering and pagination
+    @GetMapping  // Maps to GET /api/users
     public ResponseEntity<Map<String, Object>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search) {
+            // @RequestParam extracts query parameters from URL
+            // Example: /api/users?page=0&size=10&search=john
+            @RequestParam(defaultValue = "0") int page,      // Which page to show
+            @RequestParam(defaultValue = "10") int size,     // Items per page
+            @RequestParam(required = false) String search) { // Optional search term
         
         // Filter users based on search parameter
         List<UserDto> filteredUsers = users;
         if (search != null && !search.isEmpty()) {
+            // Stream API: filter users whose username contains search term
             filteredUsers = users.stream()
                 .filter(user -> user.getUsername().toLowerCase().contains(search.toLowerCase()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());  // Convert stream back to list
         }
         
-        // Apply pagination
-        int start = page * size;
-        int end = Math.min(start + size, filteredUsers.size());
+        // Apply pagination - show only a subset of results
+        int start = page * size;  // Calculate starting index
+        int end = Math.min(start + size, filteredUsers.size());  // Calculate end
         List<UserDto> pageUsers = filteredUsers.subList(start, end);
         
+        // Create response with metadata
+        // Map.of() creates an immutable map (Java 9+)
         Map<String, Object> response = Map.of(
-            "users", pageUsers,
-            "page", page,
-            "size", size,
-            "totalElements", filteredUsers.size()
+            "users", pageUsers,              // The actual data
+            "page", page,                    // Current page number
+            "size", size,                    // Items per page
+            "totalElements", filteredUsers.size()  // Total matching users
         );
         
+        // ResponseEntity wraps the response with HTTP status
+        // .ok() sets status to 200 OK
         return ResponseEntity.ok(response);
     }
     
-    // POST /api/users - Create new user
-    @PostMapping
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
-        userDto.setId(nextId++);
-        users.add(userDto);
+    // POST /api/users - Create a new user
+    @PostMapping  // Maps to POST /api/users
+    public ResponseEntity<UserDto> createUser(
+            // @Valid triggers validation on UserDto fields
+            // @RequestBody extracts JSON from request body and converts to UserDto
+            @Valid @RequestBody UserDto userDto) {
+        
+        // Assign ID and add to list
+        userDto.setId(nextId++);  // Post-increment: use current, then add 1
+        users.add(userDto);       // Add to our in-memory list
+        
+        // Return 201 Created status with the new user
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
     }
     
-    // PUT /api/users/{id} - Update user
-    @PutMapping("/{id}")
+    // PUT /api/users/{id} - Update an existing user
+    @PutMapping("/{id}")  // {id} is a path variable
     public ResponseEntity<UserDto> updateUser(
+            // @PathVariable extracts {id} from URL path
             @PathVariable Long id, 
             @Valid @RequestBody UserDto userDto) {
         
+        // Search for user with matching ID
         for (int i = 0; i < users.size(); i++) {
             if (users.get(i).getId().equals(id)) {
-                userDto.setId(id);
-                users.set(i, userDto);
-                return ResponseEntity.ok(userDto);
+                // Found the user - update it
+                userDto.setId(id);         // Keep the same ID
+                users.set(i, userDto);     // Replace old user with updated one
+                return ResponseEntity.ok(userDto);  // Return 200 OK
             }
         }
         return ResponseEntity.notFound().build();

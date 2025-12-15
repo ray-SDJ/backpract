@@ -27,53 +27,94 @@ const lessonData: LessonData = {
           </p>
           
           <div class="code-block bg-gray-900 text-white p-4 rounded-lg mb-4 overflow-x-auto">
-            <pre><code>// Route parameters and patterns
+            <pre><code>// ========== ROUTE PARAMETERS AND PATTERNS ==========
+
+// Import Express framework
 const express = require('express');
+// Create Express application instance
 const app = express();
 
-// Basic parameter
+// Basic parameter - single dynamic segment
+// :id is a route parameter (placeholder) that matches any value
+// Example URLs: /users/123, /users/abc, /users/john
 app.get('/users/:id', (req, res) => {
+  // req.params is an object containing all route parameters
+  // Destructure to extract the 'id' parameter
   const { id } = req.params;
+  
+  // Send JSON response with the captured parameter
   res.json({ message: \`User ID: \${id}\` });
 });
 
-// Multiple parameters
+// Multiple parameters - nested resource pattern
+// Common in RESTful APIs: /parent/:parentId/child/:childId
+// Example: /users/5/posts/10 → userId=5, postId=10
 app.get('/users/:userId/posts/:postId', (req, res) => {
+  // Extract both parameters from URL
   const { userId, postId } = req.params;
+  
   res.json({ 
     message: \`User \${userId}, Post \${postId}\`,
-    params: req.params
+    params: req.params    // Shows all captured parameters
   });
 });
 
-// Optional parameters (using ?)
+// Optional parameters - use ? to make parameter optional
+// :variant? means variant is optional
+// Example: /products/123 → id=123, variant=undefined
+//          /products/123/blue → id=123, variant=blue
 app.get('/products/:id/:variant?', (req, res) => {
   const { id, variant } = req.params;
+  
   res.json({ 
     productId: id,
+    // If variant is undefined, use 'default' as fallback
     variant: variant || 'default'
   });
 });
 
-// Wildcard parameters (using *)
+// Wildcard parameters - captures everything after a point
+// * matches any path, including slashes
+// Example: /files/documents/2024/report.pdf
+//   → req.params[0] = "documents/2024/report.pdf"
 app.get('/files/*', (req, res) => {
-  const filePath = req.params[0]; // Everything after /files/
+  // Wildcard content is stored in req.params[0]
+  const filePath = req.params[0];
+  
   res.json({ 
     message: 'File requested',
     path: filePath
   });
 });
 
-// Regular expression patterns
+// Regular expression patterns - advanced pattern matching
+// This regex: /.*fly$/ means "anything that ends with 'fly'"
+// Matches: /butterfly, /dragonfly, /fly
+// Doesn't match: /flying, /flyby
 app.get(/.*fly$/, (req, res) => {
   res.json({ message: 'Path ends with "fly"' });
 });
 
-// Parameter validation with regex
+// Parameter validation with regex - enforce format
+// :id(\\\\d+) means "id must be one or more digits"
+// \\\\d+ = regex for "one or more digits" (0-9)
+// Matches: /users/123, /users/5
+// Won't match: /users/abc (returns 404)
 app.get('/users/:id(\\\\d+)', (req, res) => {
-  // Only matches if id is numeric
+  // If execution reaches here, id is guaranteed to be numeric
   res.json({ userId: req.params.id });
 });</code></pre>
+          </div>
+          
+          <div class="explanation-box bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <h4 class="font-semibold text-green-900 mb-3">🎯 Route Parameter Patterns</h4>
+            <ul class="explanation-list space-y-2">
+              <li><strong>:param</strong> - Required parameter (must be present in URL)</li>
+              <li><strong>:param?</strong> - Optional parameter (can be omitted)</li>
+              <li><strong>*</strong> - Wildcard (matches everything including slashes)</li>
+              <li><strong>:param(\\d+)</strong> - Parameter with regex validation (digits only)</li>
+              <li><strong>/regex/</strong> - Full regex pattern matching</li>
+            </ul>
           </div>
         </div>
 
@@ -97,41 +138,69 @@ app.get('/users/:id(\\\\d+)', (req, res) => {
           </div>
           
           <div class="code-block bg-gray-900 text-white p-4 rounded-lg mb-4 overflow-x-auto">
-            <pre><code>// Custom middleware examples
+            <pre><code>// ========== CUSTOM MIDDLEWARE EXAMPLES ==========
 
-// Logging middleware
+// Logging middleware - tracks every request
+// Middleware signature: (req, res, next) => { ... }
 const requestLogger = (req, res, next) => {
+  // Capture current timestamp in ISO format (2024-01-15T10:30:00.000Z)
   const timestamp = new Date().toISOString();
+  
+  // req.method = HTTP method (GET, POST, PUT, DELETE, etc.)
   const method = req.method;
+  
+  // req.originalUrl = full URL including query parameters
   const url = req.originalUrl;
+  
+  // req.get() retrieves HTTP headers (case-insensitive)
+  // User-Agent tells us browser/client making the request
   const userAgent = req.get('User-Agent');
   
+  // Log request details for debugging and monitoring
   console.log(\`[\${timestamp}] \${method} \${url} - \${userAgent}\`);
   
-  // Add request ID for tracing
+  // Add custom property to req object
+  // All subsequent middleware/routes can access req.requestId
+  // Math.random().toString(36) converts number to base-36 string (0-9, a-z)
+  // .substr(2, 9) takes 9 characters, skipping "0." prefix
   req.requestId = Math.random().toString(36).substr(2, 9);
   
-  next(); // Important: call next() to continue to next middleware
+  // CRITICAL: Call next() to pass control to next middleware
+  // Without next(), request hangs forever!
+  next();
 };
 
-// Authentication middleware
+// Authentication middleware - verifies user identity
+// Checks for Bearer token in Authorization header
 const requireAuth = (req, res, next) => {
+  // Extract Authorization header from request
+  // Example: "Authorization: Bearer abc123token"
   const authHeader = req.headers.authorization;
   
+  // Validate header exists and has correct format
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Return immediately - don't call next()
+    // 401 = Unauthorized (authentication required)
     return res.status(401).json({
       success: false,
       error: 'Authentication required. Provide a valid token.'
     });
   }
   
-  const token = authHeader.substring(7); // Remove 'Bearer '
+  // Extract token by removing "Bearer " prefix (7 characters)
+  const token = authHeader.substring(7);
   
-  // In real app, verify JWT token here
+  // In real application: use jsonwebtoken library
+  // jwt.verify(token, process.env.JWT_SECRET)
+  // For demo: simple string comparison
   if (token === 'valid-token') {
+    // Attach user data to request object
+    // Available in all subsequent middleware/routes
     req.user = { id: 1, name: 'John Doe', role: 'user' };
+    // Authentication successful - continue to next middleware
     next();
   } else {
+    // Invalid token - block request
     return res.status(401).json({
       success: false,
       error: 'Invalid token'
@@ -139,9 +208,13 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// Role-based authorization
+// Role-based authorization - checks user permissions
+// This is a "middleware factory" - returns a middleware function
+// Usage: app.get('/admin', requireRole('admin'), handler)
 const requireRole = (role) => {
+  // Return actual middleware function (closure captures 'role' parameter)
   return (req, res, next) => {
+    // Check if user is authenticated first
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -149,45 +222,74 @@ const requireRole = (role) => {
       });
     }
     
+    // Check if user has required role
     if (req.user.role !== role) {
+      // 403 = Forbidden (authenticated but lacks permission)
       return res.status(403).json({
         success: false,
         error: \`Access denied. \${role} role required.\`
       });
     }
     
+    // User has correct role - allow request
     next();
   };
 };
 
-// Request validation middleware
+// Request validation middleware - checks data before processing
+// Validates incoming data from req.body
 const validateUser = (req, res, next) => {
+  // Extract data from request body
   const { name, email } = req.body;
   
+  // Array to collect all validation errors
   const errors = [];
   
+  // Validate name field
+  // Check if name exists and has minimum length after trimming whitespace
   if (!name || name.trim().length < 2) {
     errors.push('Name must be at least 2 characters long');
   }
   
+  // Validate email field
+  // Simple check: must exist and contain @ symbol
+  // In production: use email validation library or regex
   if (!email || !email.includes('@')) {
     errors.push('Valid email is required');
   }
   
+  // If any validation errors, return 400 Bad Request
   if (errors.length > 0) {
     return res.status(400).json({
       success: false,
       error: 'Validation failed',
-      details: errors
+      details: errors    // Array of specific error messages
     });
   }
   
-  // Sanitize input
+  // Sanitize input - clean and normalize data
+  // trim() removes leading/trailing whitespace
+  // toLowerCase() normalizes email to lowercase
   req.body.name = name.trim();
   req.body.email = email.toLowerCase().trim();
   
+  // Validation passed - continue to route handler
   next();
 };</code></pre>
+          </div>
+          
+          <div class="explanation-box bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+            <h4 class="font-semibold text-purple-900 mb-3">🔗 Middleware Chain Execution</h4>
+            <p class="text-purple-800 mb-2">Middleware functions execute in order. Example chain:</p>
+            <div class="bg-purple-100 p-3 rounded text-sm font-mono">
+              app.post('/users', requestLogger, requireAuth, validateUser, createUser);
+            </div>
+            <ol class="text-sm text-purple-800 mt-3 space-y-1 ml-4 list-decimal">
+              <li><strong>requestLogger:</strong> Logs request → calls next()</li>
+              <li><strong>requireAuth:</strong> Checks auth token → calls next() or returns 401</li>
+              <li><strong>validateUser:</strong> Validates data → calls next() or returns 400</li>
+              <li><strong>createUser:</strong> Final handler → processes request and sends response</li>
+            </ol>
           </div>
         </div>
 

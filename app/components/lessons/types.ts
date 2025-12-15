@@ -37,6 +37,7 @@ export type ProgrammingLanguage =
   | "nodejs"
   | "typescript"
   | "python"
+  | "django"
   | "java"
   | "csharp"
   | "go"
@@ -71,7 +72,7 @@ export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
   // Python ecosystem
   python: "python",
   flask: "python",
-  django: "python",
+  django: "django", // Django gets its own lessons
   fastapi: "python",
 
   // Java ecosystem

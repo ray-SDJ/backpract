@@ -51,20 +51,51 @@ dotnet add package BCrypt.Net-Next --version 4.0.3
     <pre class="code-block">
       <code>
 {
+  // Database connection strings
+  // Access in code with: builder.Configuration.GetConnectionString("DefaultConnection")
   "ConnectionStrings": {
+    // PostgreSQL connection string format:
+    // Host = database server address (localhost for local development)
+    // Database = database name to connect to
+    // Username/Password = database credentials
     "DefaultConnection": "Host=localhost;Database=csharp_backend;Username=your_username;Password=your_password"
   },
+  
+  // JWT (JSON Web Token) authentication settings
+  // Used for securing API endpoints with bearer tokens
   "Jwt": {
+    // Secret key for signing/verifying JWTs
+    // MUST be at least 32 characters for HS256 algorithm
+    // Keep this secret! Never commit real keys to source control
     "Key": "your_jwt_secret_key_32_chars_long",
+    
+    // Issuer = who created the token (your API)
+    // Verified when token is validated
     "Issuer": "CSharpBackend",
+    
+    // Audience = who the token is intended for (your API)
+    // Prevents tokens from other APIs being used here
     "Audience": "CSharpBackend"
   },
+  
+  // Logging configuration
+  // Controls how much detail is logged to console/files
   "Logging": {
+    // LogLevel determines what gets logged:
+    // Trace < Debug < Information < Warning < Error < Critical
     "LogLevel": {
+      // Default level for all loggers (if not specified below)
       "Default": "Information",
+      
+      // ASP.NET Core internal logging level
+      // Set to Warning to reduce noise from framework logs
       "Microsoft.AspNetCore": "Warning"
     }
   },
+  
+  // AllowedHosts = which host headers are accepted
+  // "*" allows all hosts (fine for development)
+  // In production, specify exact domains: "example.com;www.example.com"
   "AllowedHosts": "*"
 }
       </code>
@@ -115,27 +146,69 @@ dotnet run
     "Use 'dotnet watch run' for automatic reloading during development",
   ],
   solution: `// Program.cs - Basic ASP.NET Core setup
+// Import Entity Framework Core for database operations
 using Microsoft.EntityFrameworkCore;
 
+// Create a WebApplicationBuilder - this sets up the application configuration
+// WebApplicationBuilder handles:
+// - Loading appsettings.json configuration
+// - Setting up dependency injection container
+// - Configuring logging
+// args = command line arguments passed to the application
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// ========== REGISTER SERVICES (Dependency Injection) ==========
+// builder.Services is the DI container - register all services here
+// Services registered here can be injected into controllers/classes
+
+// AddControllers() registers controller services
+// Enables MVC controller functionality (routing, model binding, etc.)
 builder.Services.AddControllers();
+
+// AddEndpointsApiExplorer() generates API endpoint metadata
+// Required for Swagger/OpenAPI documentation generation
 builder.Services.AddEndpointsApiExplorer();
+
+// AddSwaggerGen() configures Swagger documentation generator
+// Creates interactive API documentation at /swagger endpoint
 builder.Services.AddSwaggerGen();
 
+// BUILD THE APPLICATION
+// builder.Build() creates the WebApplication instance
+// After this point, you can no longer register services
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// ========== CONFIGURE HTTP REQUEST PIPELINE ==========
+// Middleware executes in the order you define with app.Use*()
+// Each request flows through this pipeline top to bottom
+
+// Only enable Swagger in development (not in production)
+// app.Environment checks the current environment (Development, Staging, Production)
 if (app.Environment.IsDevelopment())
 {
+    // UseSwagger() adds Swagger JSON endpoint at /swagger/v1/swagger.json
     app.UseSwagger();
+    
+    // UseSwaggerUI() adds Swagger UI web interface at /swagger
+    // Provides interactive API documentation and testing
     app.UseSwaggerUI();
 }
 
+// UseHttpsRedirection() redirects HTTP requests to HTTPS
+// Ensures all communication is encrypted (HTTP 301 redirect)
 app.UseHttpsRedirection();
+
+// UseAuthorization() enables authorization middleware
+// Checks if user has permission to access requested resources
+// Must come AFTER UseAuthentication() if using authentication
 app.UseAuthorization();
+
+// MapControllers() maps attribute-routed controllers
+// Scans for [Route], [HttpGet], [HttpPost] attributes and creates routes
+// Without this, your controller endpoints won't work
 app.MapControllers();
 
+// Run() starts the web server and listens for requests
+// This is a blocking call - application runs until stopped
 app.Run();`,
 };

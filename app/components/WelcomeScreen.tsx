@@ -23,6 +23,12 @@ const technologies = [
     icon: "🐍",
   },
   {
+    id: "django",
+    name: "Django Framework",
+    description: "Full-featured Python web framework",
+    icon: "🎸",
+  },
+  {
     id: "java",
     name: "Java & Spring Boot",
     description: "Enterprise Java development",

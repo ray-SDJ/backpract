@@ -35,6 +35,12 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
       description: "Flask web framework",
     },
     {
+      id: "django",
+      name: "Django",
+      icon: "🎸",
+      description: "Python web framework",
+    },
+    {
       id: "java",
       name: "Java",
       icon: "☕",

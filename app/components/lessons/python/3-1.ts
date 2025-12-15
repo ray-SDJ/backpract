@@ -51,21 +51,57 @@ pip install Flask
 
     <pre class="code-block">
       <code>
+# Import Flask class from flask module
+# Flask is installed with: pip install Flask
 from flask import Flask
 
 # Step 1: Create Flask app instance
+# Flask(__name__) creates the application object
+# __name__ is a special Python variable:
+#   - When run directly, __name__ = '__main__'
+#   - When imported, __name__ = the module name
+# Flask uses this to determine root path for templates/static files
 app = Flask(__name__)
 
 # Step 2: Define a route and handler function
+# @app.route() is a DECORATOR - it wraps the function below it
+# Decorators modify function behavior without changing the function code
+# This decorator registers the function as a handler for '/hello' URL
 @app.route('/hello', methods=['GET'])
 def hello_world():
+    # This function runs when someone visits http://localhost:5000/hello
+    
+    # Return a tuple: (data, status_code)
+    # Flask automatically converts dict to JSON response
+    # {'key': 'value'} is a dictionary (like JavaScript object)
+    # 200 = HTTP status code for success (OK)
     return {'message': 'Hello, World!', 'status': 'success'}, 200
 
 # Step 3: Run the server
+# if __name__ == '__main__': only runs when file is executed directly
+# Prevents code from running when file is imported as module
 if __name__ == '__main__':
+    # app.run() starts the Flask development server
+    # debug=True enables:
+    #   - Auto-reload when you change code (no manual restart needed)
+    #   - Detailed error messages in browser
+    #   - Interactive debugger for exceptions
+    # WARNING: NEVER use debug=True in production (security risk!)
+    # port=5000 sets server port (default is 5000)
     app.run(debug=True, port=5000)
       </code>
     </pre>
+
+    <div class="explanation-box bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <h4 class="font-semibold text-blue-900 mb-3">🔍 Core Concepts Explained</h4>
+      <ul class="explanation-list space-y-2">
+        <li><strong>Flask(__name__):</strong> Creates Flask application instance. __name__ helps Flask locate resources</li>
+        <li><strong>@app.route():</strong> Decorator that maps URL path to function. Think of it as "when user visits /hello, run this function"</li>
+        <li><strong>methods=['GET']:</strong> Specifies HTTP methods this route accepts (GET, POST, PUT, DELETE, etc.)</li>
+        <li><strong>Return tuple:</strong> (data, status_code) - Flask auto-converts dict to JSON with correct status</li>
+        <li><strong>debug=True:</strong> Development mode with auto-reload and detailed errors. NEVER use in production!</li>
+      </ul>
+    </div>
 
     <h2>Code Explanation</h2>
     
