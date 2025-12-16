@@ -90,6 +90,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "3",
+      title: "Third-Party APIs",
+      lessons: [
+        {
+          id: "third-party-apis",
+          title: "Working with External APIs",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "4",
       title: "Database Integration",
       lessons: [
         {
@@ -229,6 +242,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "3",
+      title: "Third-Party APIs",
+      lessons: [
+        {
+          id: "third-party-apis",
+          title: "Working with External APIs",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "4",
       title: "Advanced Flask",
       lessons: [
         {
@@ -401,6 +427,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "4",
+      title: "Third-Party APIs",
+      lessons: [
+        {
+          id: "third-party-apis",
+          title: "Working with External APIs",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "5",
       title: "Authentication & Security",
       lessons: [
         {
@@ -427,7 +466,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "5",
+      id: "6",
       title: "Database & Advanced Topics",
       lessons: [
         {
@@ -513,6 +552,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "3",
+      title: "Third-Party APIs",
+      lessons: [
+        {
+          id: "third-party-apis",
+          title: "Working with External APIs",
+          duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "4",
       title: "Advanced Spring Boot",
       lessons: [
         {
