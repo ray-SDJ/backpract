@@ -11,6 +11,44 @@ import {
   ChevronLeft,
   Sparkles,
 } from "lucide-react";
+
+// Move lesson sequences outside component to prevent re-creation on every render
+const LESSON_SEQUENCES: Record<string, string[]> = {
+  java: ["1-1", "1-2", "1-3", "intro", "mvc", "data", "security", "testing"],
+  csharp: ["1-1", "1-2", "1-3", "intro", "database", "api", "auth", "testing"],
+  django: ["1-1", "1-2", "1-3", "intro", "third-party-apis"],
+  go: ["intro", "database", "api", "auth", "testing"],
+  php: ["intro", "database", "api", "auth", "testing"],
+  ruby: ["intro", "database", "api", "auth", "testing"],
+  rust: ["intro", "database", "api", "auth", "testing"],
+  typescript: ["intro", "database", "api", "auth", "testing"],
+  cpp: ["intro", "database", "api", "auth", "testing"],
+  python: [
+    "1-1",
+    "1-2",
+    "1-3",
+    "3-1",
+    "3-2",
+    "3-3",
+    "3-4",
+    "3-5",
+    "3-6",
+    "3-7",
+    "third-party-apis",
+  ],
+  nodejs: [
+    "1-1",
+    "1-2",
+    "1-3",
+    "3-1",
+    "3-2",
+    "3-3",
+    "4-1",
+    "4-2",
+    "4-3",
+    "third-party-apis",
+  ],
+};
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -187,50 +225,7 @@ export default function LessonContent({
 
   // Get previous lesson ID
   const getPreviousLessonId = (): string | null => {
-    // Define lesson sequences for different technologies
-    const lessonSequences: Record<string, string[]> = {
-      java: [
-        "1-1",
-        "1-2",
-        "1-3",
-        "intro",
-        "mvc",
-        "data",
-        "security",
-        "testing",
-      ],
-      csharp: [
-        "1-1",
-        "1-2",
-        "1-3",
-        "intro",
-        "database",
-        "api",
-        "auth",
-        "testing",
-      ],
-      go: ["intro", "database", "api", "auth", "testing"],
-      php: ["intro", "database", "api", "auth", "testing"],
-      ruby: ["intro", "database", "api", "auth", "testing"],
-      rust: ["intro", "database", "api", "auth", "testing"],
-      typescript: ["intro", "database", "api", "auth", "testing"],
-      cpp: ["intro", "database", "api", "auth", "testing"],
-      python: [
-        "1-1",
-        "1-2",
-        "1-3",
-        "3-1",
-        "3-2",
-        "3-3",
-        "3-4",
-        "3-5",
-        "3-6",
-        "3-7",
-      ],
-      nodejs: ["1-1", "1-2", "1-3", "3-1", "3-2", "3-3", "4-1", "4-2", "4-3"],
-    };
-
-    const sequence = lessonSequences[currentTechnology];
+    const sequence = LESSON_SEQUENCES[currentTechnology];
     if (!sequence) return null;
 
     const currentIndex = sequence.indexOf(lessonId);
@@ -241,50 +236,7 @@ export default function LessonContent({
 
   // Get next lesson ID
   const getNextLessonId = (): string | null => {
-    // Define lesson sequences for different technologies
-    const lessonSequences: Record<string, string[]> = {
-      java: [
-        "1-1",
-        "1-2",
-        "1-3",
-        "intro",
-        "mvc",
-        "data",
-        "security",
-        "testing",
-      ],
-      csharp: [
-        "1-1",
-        "1-2",
-        "1-3",
-        "intro",
-        "database",
-        "api",
-        "auth",
-        "testing",
-      ],
-      go: ["intro", "database", "api", "auth", "testing"],
-      php: ["intro", "database", "api", "auth", "testing"],
-      ruby: ["intro", "database", "api", "auth", "testing"],
-      rust: ["intro", "database", "api", "auth", "testing"],
-      typescript: ["intro", "database", "api", "auth", "testing"],
-      cpp: ["intro", "database", "api", "auth", "testing"],
-      python: [
-        "1-1",
-        "1-2",
-        "1-3",
-        "3-1",
-        "3-2",
-        "3-3",
-        "3-4",
-        "3-5",
-        "3-6",
-        "3-7",
-      ],
-      nodejs: ["1-1", "1-2", "1-3", "3-1", "3-2", "3-3", "4-1", "4-2", "4-3"],
-    };
-
-    const sequence = lessonSequences[currentTechnology];
+    const sequence = LESSON_SEQUENCES[currentTechnology];
     if (!sequence) return null;
 
     const currentIndex = sequence.indexOf(lessonId);

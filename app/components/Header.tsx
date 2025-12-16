@@ -19,77 +19,78 @@ interface HeaderProps {
   onTechnologyChange: (tech: string) => void;
 }
 
-export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
-  const technologies = [
-    // Primary Backend Languages
-    {
-      id: "nodejs",
-      name: "Node.js",
-      icon: "🟢",
-      description: "JavaScript backend with Express",
-    },
-    {
-      id: "python",
-      name: "Python",
-      icon: "🐍",
-      description: "Flask web framework",
-    },
-    {
-      id: "django",
-      name: "Django",
-      icon: "🎸",
-      description: "Python web framework",
-    },
-    {
-      id: "java",
-      name: "Java",
-      icon: "☕",
-      description: "Spring Boot framework",
-    },
-    {
-      id: "csharp",
-      name: "C#",
-      icon: "🔷",
-      description: ".NET Core & ASP.NET",
-    },
-    {
-      id: "go",
-      name: "Go",
-      icon: "🐹",
-      description: "High-performance backend",
-    },
-    {
-      id: "rust",
-      name: "Rust",
-      icon: "🦀",
-      description: "Systems programming & web",
-    },
-    {
-      id: "php",
-      name: "PHP",
-      icon: "🐘",
-      description: "Laravel & Symfony",
-    },
-    {
-      id: "ruby",
-      name: "Ruby",
-      icon: "💎",
-      description: "Ruby on Rails",
-    },
-    {
-      id: "typescript",
-      name: "TypeScript",
-      icon: "🔷",
-      description: "Type-safe Node.js backend",
-    },
-    {
-      id: "cpp",
-      name: "C++",
-      icon: "⚡",
-      description: "High-performance backends",
-    },
-  ];
+// Move technologies array outside component to prevent re-creation on every render
+const technologies = [
+  // Primary Backend Languages
+  {
+    id: "nodejs",
+    name: "Node.js",
+    icon: "🟢",
+    description: "JavaScript backend with Express",
+  },
+  {
+    id: "python",
+    name: "Python",
+    icon: "🐍",
+    description: "Flask web framework",
+  },
+  {
+    id: "django",
+    name: "Django",
+    icon: "🎸",
+    description: "Python web framework",
+  },
+  {
+    id: "java",
+    name: "Java",
+    icon: "☕",
+    description: "Spring Boot framework",
+  },
+  {
+    id: "csharp",
+    name: "C#",
+    icon: "🔷",
+    description: ".NET Core & ASP.NET",
+  },
+  {
+    id: "go",
+    name: "Go",
+    icon: "🐹",
+    description: "High-performance backend",
+  },
+  {
+    id: "rust",
+    name: "Rust",
+    icon: "🦀",
+    description: "Systems programming & web",
+  },
+  {
+    id: "php",
+    name: "PHP",
+    icon: "🐘",
+    description: "Laravel & Symfony",
+  },
+  {
+    id: "ruby",
+    name: "Ruby",
+    icon: "💎",
+    description: "Ruby on Rails",
+  },
+  {
+    id: "typescript",
+    name: "TypeScript",
+    icon: "🔷",
+    description: "Type-safe Node.js backend",
+  },
+  {
+    id: "cpp",
+    name: "C++",
+    icon: "⚡",
+    description: "High-performance backends",
+  },
+];
 
+export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
   const currentTech =
     technologies.find((t) => t.id === currentTechnology) || technologies[0];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Play, RotateCcw, Copy, Check } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -210,7 +210,7 @@ export function CodeEditor({
   };
 
   // Get language display name
-  const getLanguageName = () => {
+  const languageDisplayName = useMemo(() => {
     const names: Record<string, string> = {
       javascript: "JavaScript",
       python: "Python",
@@ -227,7 +227,7 @@ export function CodeEditor({
       sql: "SQL",
     };
     return names[language] || language.toUpperCase();
-  };
+  }, [language]);
 
   return (
     <div className="flex flex-col h-full bg-slate-900">
@@ -240,7 +240,7 @@ export function CodeEditor({
             <div className="w-3 h-3 rounded-full bg-green-500" />
           </div>
           <span className="text-sm font-medium text-slate-300">
-            {getLanguageName()}
+            {languageDisplayName}
           </span>
         </div>
 
@@ -302,7 +302,7 @@ export function CodeEditor({
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
-            placeholder={`Write your ${getLanguageName()} code here...`}
+            placeholder={`Write your ${languageDisplayName} code here...`}
           />
         </div>
       </div>

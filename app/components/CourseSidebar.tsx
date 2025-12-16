@@ -1197,6 +1197,16 @@ const applyDynamicLessonStates = (
   }));
 };
 
+// Technology names for fallback
+const FALLBACK_TECH_NAMES: Record<string, string> = {
+  typescript: "TypeScript & Node.js",
+  kotlin: "Kotlin Backend",
+  swift: "Server-Side Swift",
+  scala: "Scala Backend",
+  haskell: "Haskell Web",
+  ocaml: "OCaml Backend",
+};
+
 // Fallback lessons for languages without specific modules
 const getModulesForTechnology = (technology: string): Module[] => {
   // Check if we have specific lessons for this technology
@@ -1205,17 +1215,8 @@ const getModulesForTechnology = (technology: string): Module[] => {
   }
 
   // Generate basic structure for other technologies
-  const technologyNames: Record<string, string> = {
-    typescript: "TypeScript & Node.js",
-    kotlin: "Kotlin Backend",
-    swift: "Server-Side Swift",
-    scala: "Scala Backend",
-    haskell: "Haskell Web",
-    ocaml: "OCaml Backend",
-  };
-
   const techName =
-    technologyNames[technology] ||
+    FALLBACK_TECH_NAMES[technology] ||
     technology.charAt(0).toUpperCase() + technology.slice(1);
 
   return [
@@ -1386,8 +1387,8 @@ export function CourseSidebar({
   );
   const progressPercentage = (completedLessons / totalLessons) * 100;
 
-  // Get technology display name
-  const getTechnologyDisplayName = (tech: string): string => {
+  // Get technology display name - memoized to prevent recalculation
+  const displayName = useMemo(() => {
     const techNames: Record<string, string> = {
       nodejs: "Node.js & Express",
       python: "Python & Flask",
@@ -1406,17 +1407,20 @@ export function CourseSidebar({
       ocaml: "OCaml Backend",
       sql: "SQL Databases",
       mongodb: "MongoDB & NoSQL",
+      django: "Django Framework",
     };
-    return techNames[tech] || tech.charAt(0).toUpperCase() + tech.slice(1);
-  };
+    return (
+      techNames[currentTechnology] ||
+      currentTechnology.charAt(0).toUpperCase() + currentTechnology.slice(1)
+    );
+  }, [currentTechnology]);
 
   return (
     <div className="w-80 border-r bg-slate-50 flex flex-col h-screen">
       <div className="p-6 border-b bg-white">
-        <h2 className="mb-1">{getTechnologyDisplayName(currentTechnology)}</h2>
+        <h2 className="mb-1">{displayName}</h2>
         <p className="text-slate-600 text-sm mb-4">
-          Master backend development with{" "}
-          {getTechnologyDisplayName(currentTechnology)}
+          Master backend development with {displayName}
         </p>
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
