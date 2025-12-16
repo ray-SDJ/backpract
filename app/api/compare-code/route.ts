@@ -59,11 +59,19 @@ export async function POST(request: NextRequest) {
     // Initialize Google AI
     const ai = new GoogleGenAI({ apiKey });
 
+    // Create timeout wrapper for Gemini API call (20 second timeout)
+    const generateContentWithTimeout = Promise.race([
+      ai.models.generateContent({
+        model: "models/gemini-1.5-flash", // Full model path for v1beta API
+        contents: prompt,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("AI request timeout")), 20000)
+      ),
+    ]);
+
     // Generate content using Gemini
-    const response = await ai.models.generateContent({
-      model: "models/gemini-1.5-flash", // Full model path for v1beta API
-      contents: prompt,
-    });
+    const response = await generateContentWithTimeout;
 
     const feedback = response.text || "No feedback available";
 

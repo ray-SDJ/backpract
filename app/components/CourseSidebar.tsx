@@ -2,6 +2,7 @@ import { CheckCircle2, Circle, Lock, PlayCircle } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Progress } from "./ui/progress";
 import { ValidationService } from "./lessons/ValidationService";
+import { useMemo } from "react";
 
 interface Lesson {
   id: string;
@@ -1368,8 +1369,11 @@ export function CourseSidebar({
   currentTechnology,
   onLessonSelect,
 }: CourseSidebarProps) {
-  // Get modules specific to the current technology
-  const courseModules = getModulesForTechnology(currentTechnology);
+  // Get modules specific to the current technology - memoized to prevent infinite re-renders
+  const courseModules = useMemo(
+    () => getModulesForTechnology(currentTechnology),
+    [currentTechnology]
+  );
 
   const totalLessons = courseModules.reduce(
     (acc: number, module: Module) => acc + module.lessons.length,

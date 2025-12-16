@@ -139,23 +139,43 @@ export default function LessonContent({
     setAiFeedback(null);
 
     try {
-      const response = await fetch("/api/compare-code", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userInput: currentCode,
-          lessonSolution: lessonData.solution,
-        }),
-      });
+      // Add timeout to prevent hanging on slow AI responses
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
-      const data = await response.json();
+      try {
+        const response = await fetch("/api/compare-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userInput: currentCode,
+            lessonSolution: lessonData.solution,
+          }),
+          signal: controller.signal,
+        });
 
-      if (data.success) {
-        setAiFeedback(data.feedback);
-      } else {
-        setAiError(data.error || "Failed to get AI feedback");
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+
+        if (data.success) {
+          setAiFeedback(data.feedback);
+        } else {
+          setAiError(data.error || "Failed to get AI feedback");
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+
+        // Handle timeout specifically
+        if (fetchError.name === "AbortError") {
+          setAiError(
+            "AI feedback timed out. Please try again or check your code manually."
+          );
+        } else {
+          throw fetchError;
+        }
       }
     } catch (error) {
       console.error("Error checking work:", error);
