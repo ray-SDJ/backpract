@@ -280,21 +280,197 @@ app.get('/users/:id', (req, res) => {
   });
 });
 
-// GET route with query parameters (filtering, pagination, search)
-// Query params come after ? in URL: /api/users?page=2&limit=20&search=john
-// They're optional and used for filtering/pagination
-app.get('/api/users', (req, res) => {
-  // req.query is an object containing all query parameters
-  // Use destructuring with default values
+// ========== DATABASE INTEGRATION EXAMPLES ==========
+// In real applications, you'll query from a database like MongoDB
+// Here's how to integrate with Mongoose (MongoDB ODM)
+
+// First, define a User model (in models/User.js):
+// const mongoose = require('mongoose');
+// const userSchema = new mongoose.Schema({
+//   name: { type: String, required: true },
+//   email: { type: String, required: true, unique: true },
+//   age: { type: Number, min: 18 },
+//   createdAt: { type: Date, default: Date.now }
+// });
+// const User = mongoose.model('User', userSchema);
+// module.exports = User;
+
+// GET route with DATABASE QUERY - Fetch users from MongoDB
+// Query params for filtering, pagination, search
+app.get('/api/users', async (req, res) => {
+  try {
+    // Extract query parameters with defaults
+    const { page = 1, limit = 10, search } = req.query;
+    
+    // Calculate pagination values
+    const skip = (page - 1) * limit;
+    
+    // ========== BUILD DATABASE QUERY ==========
+    // Create query object for filtering
+    let query = {};
+    
+    // If search term provided, add regex search on name
+    // $regex allows pattern matching (like SQL LIKE)
+    // $options: 'i' makes it case-insensitive
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+    
+    // ========== EXECUTE DATABASE QUERIES ==========
+    // User.find(query) queries the database with filters
+    // .limit(limit) restricts number of results
+    // .skip(skip) skips results for pagination (e.g., skip 10 for page 2)
+    // .sort({ createdAt: -1 }) sorts by newest first (-1 = descending)
+    // await pauses execution until database query completes
+    const users = await User.find(query)
+      .limit(parseInt(limit))
+      .skip(skip)
+      .sort({ createdAt: -1 });
+    
+    // Count total documents matching query (for pagination metadata)
+    const total = await User.countDocuments(query);
+    
+    // Return paginated results with metadata
+    res.json({
+      success: true,
+      data: users,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    // Error handling for database failures
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch users from database'
+    });
+  }
+});
+
+// POST route with DATABASE INSERT - Create new user in MongoDB
+app.post('/api/users', async (req, res) => {
+  try {
+    // Extract data from request body
+    const { name, email, age } = req.body;
+    
+    // ========== VALIDATION ==========
+    // Validate required fields
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Name and email are required'
+      });
+    }
+    
+    // ========== DATABASE INSERT ==========
+    // User.create() inserts new document into MongoDB
+    // Mongoose automatically validates against schema
+    // Returns the created document with auto-generated _id
+    const newUser = await User.create({
+      name,
+      email,
+      age: age || 18  // Default age if not provided
+    });
+    
+    // Return created user with 201 status (Created)
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: newUser
+    });
+  } catch (error) {
+    // Handle duplicate email error (MongoDB unique constraint)
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        error: 'Email already exists'
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    // Other errors
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create user'
+    });
+  }
+});
+
+// PUT route with DATABASE UPDATE - Update existing user in MongoDB
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, age } = req.body;
+    
+    // ========== DATABASE UPDATE ==========
+    // User.findByIdAndUpdate() finds document by ID and updates it
+    // First param: document ID to find
+    // Second param: fields to update
+    // Options object:
+    //   - new: true returns the updated document (not the old one)
+    //   - runValidators: true runs schema validation on update
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { name, email, age },
+      { new: true, runValidators: true }
+    );
+    
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    // Return updated user
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      data: updatedUser
+    });
+  } catch (error) {
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    // Handle invalid ID format
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid user ID format'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update user'
+    });
+  }
+});
+
+// ========== DEMO WITHOUT DATABASE (for learning) ==========
+// Below is a simpler version without database for practice:
+app.get('/api/demo-users', (req, res) => {
+  // Extract query parameters
   const { page = 1, limit = 10, search } = req.query;
   
-  // Array.from() creates array from length
-  // (_, i) => {...} is mapping function where:
-  //   _ = unused first parameter (the undefined array element)
-  //   i = index (0, 1, 2, 3, ...)
+  // Generate mock data
   const users = Array.from({ length: limit }, (_, i) => ({
-    // Calculate ID based on page and position
-    // Page 1: IDs 1-10, Page 2: IDs 11-20, etc.
     id: (page - 1) * limit + i + 1,
     name: \`User \${(page - 1) * limit + i + 1}\`,
     email: \`user\${(page - 1) * limit + i + 1}@example.com\`

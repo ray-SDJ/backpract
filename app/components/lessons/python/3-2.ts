@@ -61,66 +61,181 @@ from flask import Flask, request, jsonify
 # Create Flask application
 app = Flask(__name__)
 
-# ========== CREATE - Add new resource ==========
-# @app.route() decorator with methods parameter
-# methods=['POST'] means this route ONLY accepts POST requests
+# ========== DATABASE INTEGRATION EXAMPLES ==========
+# In real Flask applications, use Flask-SQLAlchemy for database operations
+# First, set up your database models (in models.py):
+
+# from flask_sqlalchemy import SQLAlchemy
+# from datetime import datetime
+
+# db = SQLAlchemy(app)
+
+# class User(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True, nullable=False)
+#     email = db.Column(db.String(120), unique=True, nullable=False)
+#     age = db.Column(db.Integer)
+#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+#
+#     def to_dict(self):
+#         return {
+#             'id': self.id,
+#             'username': self.username,
+#             'email': self.email,
+#             'age': self.age,
+#             'created_at': self.created_at.isoformat()
+#         }
+
+# ========== CREATE - DATABASE INSERT ==========
 @app.route('/api/users', methods=['POST'])
 def create_user():
-    # request.get_json() extracts JSON data from request body
-    # It automatically parses JSON string into Python dictionary
-    # Example request body: {"username": "john", "email": "john@example.com"}
+    """
+    Create new user in database
+    Expected JSON: {"username": "john", "email": "john@example.com", "age": 25}
+    """
+    # Get JSON data from request body
     data = request.get_json()
     
-    # In real application: validate data, check if user exists, save to database
-    # For demo: create dictionary with user data
-    new_user = {
-        'id': 123,                    # Would come from database after insert
-        'username': data['username'], # Extract username from request
-        'email': data['email']        # Extract email from request
-    }
+    # ========== VALIDATION ==========
+    # Validate required fields before database operation
+    if not data or 'username' not in data or 'email' not in data:
+        return jsonify({'error': 'Username and email are required'}), 400
     
-    # jsonify() converts dict to JSON response and sets Content-Type header
-    # 201 = HTTP status "Created" (correct status for POST that creates resource)
-    return jsonify(new_user), 201
+    try:
+        # ========== DATABASE INSERT ==========
+        # Create new User instance with data from request
+        new_user = User(
+            username=data['username'],
+            email=data['email'],
+            age=data.get('age', 18)  # Default age if not provided
+        )
+        
+        # Add to database session (prepares for commit)
+        # Think of session as a "staging area" for database changes
+        db.session.add(new_user)
+        
+        # Commit saves changes to database permanently
+        # This is when SQL INSERT is actually executed
+        db.session.commit()
+        
+        # Return created user with 201 status
+        return jsonify({
+            'message': 'User created successfully',
+            'user': new_user.to_dict()
+        }), 201
+        
+    except IntegrityError:
+        # Rollback removes failed changes from session
+        db.session.rollback()
+        
+        # IntegrityError usually means unique constraint violation
+        # (username or email already exists)
+        return jsonify({'error': 'Username or email already exists'}), 409
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to create user'}), 500
 
-# ========== READ - Get resources ==========
-# Same route path as create_user, but different HTTP method (GET vs POST)
-# Flask distinguishes routes by BOTH path AND method
+# ========== READ - DATABASE QUERY ==========
 @app.route('/api/users', methods=['GET'])
 def get_users():
-    # request.args = dictionary-like object containing query parameters
-    # Query params come after ? in URL: /api/users?page=2&limit=10
-    # .get('page', 1, type=int) means:
-    #   - Get 'page' parameter
-    #   - Default to 1 if not provided
-    #   - Convert to int type (prevents string/injection issues)
+    """
+    Fetch users from database with filtering and pagination
+    Query params: ?page=1&limit=10&search=john
+    """
+    # Extract query parameters
     page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 10, type=int)
+    search = request.args.get('search', '', type=str)
     
-    # In real app: query database with pagination
-    # For demo: return mock data
-    return jsonify({
-        'users': [{'id': 1, 'username': 'john'}],  # Would be real data from DB
-        'page': page
-    }), 200  # 200 = OK/Success
+    try:
+        # ========== BUILD DATABASE QUERY ==========
+        # Start with base query for all users
+        query = User.query
+        
+        # Add search filter if provided
+        # filter() adds WHERE clause to SQL query
+        # ilike() is case-insensitive LIKE (SQL: username ILIKE '%search%')
+        if search:
+            query = query.filter(User.username.ilike(f'%{search}%'))
+        
+        # ========== EXECUTE QUERY WITH PAGINATION ==========
+        # paginate() executes query and returns paginated results
+        # page: which page to return
+        # per_page: number of items per page
+        # error_out=False: don't raise error if page doesn't exist
+        pagination = query.paginate(
+            page=page,
+            per_page=limit,
+            error_out=False
+        )
+        
+        # Convert User objects to dictionaries for JSON serialization
+        users = [user.to_dict() for user in pagination.items]
+        
+        # Return results with pagination metadata
+        return jsonify({
+            'users': users,
+            'pagination': {
+                'page': page,
+                'limit': limit,
+                'total': pagination.total,
+                'pages': pagination.pages,
+                'has_next': pagination.has_next,
+                'has_prev': pagination.has_prev
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch users'}), 500
 
-# ========== UPDATE - Modify existing resource ==========
-# &lt;int:user_id&gt; is a URL parameter (dynamic segment)
-# int: ensures parameter is an integer (Flask validates this)
-# Example URLs: /api/users/5, /api/users/123
-# user_id parameter is passed to function automatically
+# ========== UPDATE - DATABASE UPDATE ==========
 @app.route('/api/users/&lt;int:user_id&gt;', methods=['PUT'])
 def update_user(user_id):
-    # user_id comes from URL, data comes from request body
-    # PUT typically replaces entire resource
+    """
+    Update existing user in database
+    URL param: user_id (e.g., /api/users/5)
+    Expected JSON: {"username": "john_updated", "email": "new@email.com", "age": 30}
+    """
+    # Get JSON data from request
     data = request.get_json()
     
-    # In real app: 
-    # 1. Check if user with user_id exists (return 404 if not)
-    # 2. Update user in database with new data
-    # 3. Return updated user
-    
-    # For demo: return success response
-    return jsonify({'id': user_id, 'updated': True}), 200
+    try:
+        # ========== FIND USER IN DATABASE ==========
+        # User.query.get(id) fetches user by primary key
+        # Returns None if user doesn't exist
+        user = User.query.get(user_id)
+        
+        # Check if user exists
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # ========== UPDATE USER FIELDS ==========
+        # Update only fields that are provided in request
+        if 'username' in data:
+            user.username = data['username']
+        if 'email' in data:
+            user.email = data['email']
+        if 'age' in data:
+            user.age = data['age']
+        
+        # Commit changes to database
+        # This executes SQL UPDATE statement
+        db.session.commit()
+        
+        # Return updated user
+        return jsonify({
+            'message': 'User updated successfully',
+            'user': user.to_dict()
+        }), 200
+        
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'Username or email already exists'}), 409
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to update user'}), 500
 
 # ========== DELETE - Remove resource ==========
 @app.route('/api/users/&lt;int:user_id&gt;', methods=['DELETE'])

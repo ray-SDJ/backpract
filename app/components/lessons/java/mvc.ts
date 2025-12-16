@@ -52,52 +52,254 @@ public class UserDto {
     
     <pre class="code-block">
       <code>
-// @RestController combines @Controller and @ResponseBody
-// It tells Spring this class handles HTTP requests and returns JSON
+// ========== DATABASE INTEGRATION WITH SPRING DATA JPA ==========
+// In real Spring Boot applications, use Spring Data JPA for database operations
+// First, create JPA Entity and Repository:
+
+// @Entity  // Marks this class as a database table
+// @Table(name = "users")
+// public class User {
+//     @Id  // Primary key
+//     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment
+//     private Long id;
+//     
+//     @Column(unique = true, nullable = false)
+//     private String username;
+//     
+//     @Column(unique = true, nullable = false)
+//     private String email;
+//     
+//     @Column
+//     private Integer age;
+//     
+//     @CreationTimestamp
+//     private LocalDateTime createdAt;
+//     
+//     // Getters, setters, constructors...
+// }
+
+// public interface UserRepository extends JpaRepository<User, Long> {
+//     // Spring Data JPA automatically implements these methods!
+//     Optional<User> findByUsername(String username);
+//     Page<User> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
+//     boolean existsByUsername(String username);
+// }
+
 @RestController
-
-// Base URL path - all methods will start with /api/users
 @RequestMapping("/api/users")
-
-// @Validated enables validation on request parameters
 @Validated
-
-// @CrossOrigin allows requests from specified origins (CORS)
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
     
-    // In-memory storage for demonstration (use database in real apps)
-    private final List<UserDto> users = new ArrayList<>();
-    private Long nextId = 1L;  // Auto-increment ID
+    // ========== DEPENDENCY INJECTION ==========
+    // @Autowired tells Spring to inject the UserRepository bean
+    // UserRepository is auto-implemented by Spring Data JPA
+    @Autowired
+    private UserRepository userRepository;  // Database access layer
     
-    // GET /api/users - Retrieve all users with optional filtering and pagination
-    @GetMapping  // Maps to GET /api/users
+    // ========== GET - DATABASE QUERY ==========
+    // Fetch users from database with filtering and pagination
+    @GetMapping
     public ResponseEntity<Map<String, Object>> getAllUsers(
-            // @RequestParam extracts query parameters from URL
-            // Example: /api/users?page=0&size=10&search=john
-            @RequestParam(defaultValue = "0") int page,      // Which page to show
-            @RequestParam(defaultValue = "10") int size,     // Items per page
-            @RequestParam(required = false) String search) { // Optional search term
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
         
-        // Filter users based on search parameter
-        List<UserDto> filteredUsers = users;
+        try {
+            // ========== BUILD PAGEABLE OBJECT ==========
+            // Pageable defines pagination and sorting parameters
+            // PageRequest.of(page, size) creates pagination request
+            // Sort.by(...) adds sorting (newest first)
+            Pageable pageable = PageRequest.of(
+                page, 
+                size,
+                Sort.by("createdAt").descending()
+            );
+            
+            // ========== EXECUTE DATABASE QUERY ==========
+            // Page<User> contains results and pagination metadata
+            Page<User> userPage;
+            
+            if (search != null && !search.isEmpty()) {
+                // Query with search filter
+                // findByUsernameContainingIgnoreCase executes:
+                // SELECT * FROM users WHERE username ILIKE '%search%'
+                userPage = userRepository
+                    .findByUsernameContainingIgnoreCase(search, pageable);
+            } else {
+                // Query all users with pagination
+                // findAll() executes: SELECT * FROM users
+                userPage = userRepository.findAll(pageable);
+            }
+            
+            // ========== CONVERT TO DTO ==========
+            // Convert Entity objects to DTOs (Data Transfer Objects)
+            // DTOs control what data is exposed in API responses
+            List<UserDto> userDtos = userPage.getContent().stream()
+                .map(this::convertToDto)  // Convert each User to UserDto
+                .collect(Collectors.toList());
+            
+            // Build response with pagination metadata
+            Map<String, Object> response = Map.of(
+                "users", userDtos,
+                "pagination", Map.of(
+                    "page", userPage.getNumber(),
+                    "size", userPage.getSize(),
+                    "totalElements", userPage.getTotalElements(),
+                    "totalPages", userPage.getTotalPages(),
+                    "isLast", userPage.isLast()
+                )
+            );
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            // Error handling
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to fetch users from database"));
+        }
+    }
+    
+    // ========== POST - DATABASE INSERT ==========
+    // Create new user in database
+    @PostMapping
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserDto userDto) {
+        try {
+            // ========== VALIDATION ==========
+            // Check if username already exists
+            // existsByUsername() executes: SELECT COUNT(*) FROM users WHERE username = ?
+            if (userRepository.existsByUsername(userDto.getUsername())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Username already exists"));
+            }
+            
+            // ========== CONVERT DTO TO ENTITY ==========
+            // DTOs are for API layer, Entities are for database layer
+            User user = new User();
+            user.setUsername(userDto.getUsername());
+            user.setEmail(userDto.getEmail());
+            user.setAge(userDto.getAge());
+            
+            // ========== DATABASE INSERT ==========
+            // userRepository.save() executes SQL INSERT
+            // INSERT INTO users (username, email, age, created_at) VALUES (?, ?, ?, ?)
+            // Returns saved entity with auto-generated ID
+            User savedUser = userRepository.save(user);
+            
+            // Convert back to DTO for response
+            UserDto responseDto = convertToDto(savedUser);
+            
+            // Return 201 Created with saved user
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of(
+                    "message", "User created successfully",
+                    "user", responseDto
+                ));
+                
+        } catch (DataIntegrityViolationException e) {
+            // Handle database constraint violations (unique email, etc.)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", "Email already exists"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to create user"));
+        }
+    }
+    
+    // ========== PUT - DATABASE UPDATE ==========
+    // Update existing user in database
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long id,  // Extract from URL path
+            @Valid @RequestBody UserDto userDto) {
+        
+        try {
+            // ========== FIND USER IN DATABASE ==========
+            // findById() executes: SELECT * FROM users WHERE id = ?
+            // Returns Optional<User> (may or may not contain user)
+            Optional<User> userOptional = userRepository.findById(id);
+            
+            // Check if user exists
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+            }
+            
+            // Get the user from Optional
+            User user = userOptional.get();
+            
+            // ========== UPDATE USER FIELDS ==========
+            // Update only provided fields
+            if (userDto.getUsername() != null) {
+                user.setUsername(userDto.getUsername());
+            }
+            if (userDto.getEmail() != null) {
+                user.setEmail(userDto.getEmail());
+            }
+            if (userDto.getAge() != null) {
+                user.setAge(userDto.getAge());
+            }
+            
+            // ========== DATABASE UPDATE ==========
+            // save() on existing entity executes SQL UPDATE
+            // UPDATE users SET username=?, email=?, age=? WHERE id=?
+            User updatedUser = userRepository.save(user);
+            
+            // Convert to DTO for response
+            UserDto responseDto = convertToDto(updatedUser);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "User updated successfully",
+                "user", responseDto
+            ));
+            
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", "Username or email already exists"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to update user"));
+        }
+    }
+    
+    // ========== HELPER METHOD ==========
+    // Convert Entity to DTO (for API responses)
+    private UserDto convertToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setAge(user.getAge());
+        return dto;
+    }
+    
+    // ========== DEMO WITHOUT DATABASE (for learning) ==========
+    // Below is the original in-memory version for comparison:
+    private final List<UserDto> demoUsers = new ArrayList<>();
+    private Long nextId = 1L;
+    
+    @GetMapping("/demo")
+    public ResponseEntity<Map<String, Object>> getDemoUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        
+        // Filter users based on search
+        List<UserDto> filteredUsers = demoUsers;
         if (search != null && !search.isEmpty()) {
-            // Stream API: filter users whose username contains search term
-            filteredUsers = users.stream()
+            filteredUsers = demoUsers.stream()
                 .filter(user -> user.getUsername().toLowerCase().contains(search.toLowerCase()))
-                .collect(Collectors.toList());  // Convert stream back to list
+                .collect(Collectors.toList());
         }
         
-        // Apply pagination - show only a subset of results
-        int start = page * size;  // Calculate starting index
-        int end = Math.min(start + size, filteredUsers.size());  // Calculate end
+        // Apply pagination
+        int start = page * size;
+        int end = Math.min(start + size, filteredUsers.size());
         List<UserDto> pageUsers = filteredUsers.subList(start, end);
         
-        // Create response with metadata
-        // Map.of() creates an immutable map (Java 9+)
         Map<String, Object> response = Map.of(
-            "users", pageUsers,              // The actual data
-            "page", page,                    // Current page number
+            "users", pageUsers,
+            "page", page
             "size", size,                    // Items per page
             "totalElements", filteredUsers.size()  // Total matching users
         );
