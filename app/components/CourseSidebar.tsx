@@ -91,12 +91,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "3",
-      title: "Third-Party APIs",
+      title: "APIs & Integration",
       lessons: [
         {
           id: "third-party-apis",
           title: "Working with External APIs",
           duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "graphql",
+          title: "GraphQL APIs",
+          duration: "50 min",
           completed: false,
           locked: false,
         },
@@ -137,7 +144,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "4",
+      id: "5",
       title: "Error & Exception Handling",
       lessons: [
         {
@@ -150,7 +157,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "5",
+      id: "6",
       title: "Reference & Cheat Sheets",
       lessons: [
         {
@@ -296,7 +303,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "4",
+      id: "5",
       title: "Data Structures & Algorithms",
       lessons: [
         {
@@ -309,7 +316,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "5",
+      id: "6",
       title: "Error & Exception Handling",
       lessons: [
         {
@@ -322,7 +329,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "6",
+      id: "7",
       title: "Reference & Cheat Sheets",
       lessons: [
         {
@@ -428,12 +435,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "4",
-      title: "Third-Party APIs",
+      title: "APIs & Integration",
       lessons: [
         {
           id: "third-party-apis",
           title: "Working with External APIs",
           duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "graphql",
+          title: "GraphQL APIs with Django",
+          duration: "50 min",
           completed: false,
           locked: false,
         },
@@ -553,12 +567,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "3",
-      title: "Third-Party APIs",
+      title: "APIs & Integration",
       lessons: [
         {
           id: "third-party-apis",
           title: "Working with External APIs",
           duration: "40 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "graphql",
+          title: "GraphQL APIs with Java",
+          duration: "50 min",
           completed: false,
           locked: false,
         },
@@ -599,7 +620,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "4",
+      id: "5",
       title: "Data Structures & Algorithms",
       lessons: [
         {
@@ -612,7 +633,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "5",
+      id: "6",
       title: "Error & Exception Handling",
       lessons: [
         {
@@ -625,7 +646,7 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
     {
-      id: "6",
+      id: "7",
       title: "Reference & Cheat Sheets",
       lessons: [
         {
@@ -1053,6 +1074,19 @@ const technologyModules: Record<string, Module[]> = {
     },
     {
       id: "3",
+      title: "APIs & Integration",
+      lessons: [
+        {
+          id: "graphql",
+          title: "GraphQL with Next.js",
+          duration: "50 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "4",
       title: "Advanced Next.js Backend",
       lessons: [
         {
@@ -1172,7 +1206,28 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
   ],
+
+  // GraphQL lessons
+  graphql: [
+    {
+      id: "1",
+      title: "GraphQL Fundamentals",
+      lessons: [
+        {
+          id: "graphql",
+          title: "GraphQL APIs with Node.js",
+          duration: "50 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+  ],
 };
+
+// Cache to prevent recreating modules on every render
+let cachedModules: Module[] | null = null;
+let cachedTechnology: string | null = null;
 
 // Apply dynamic lesson states based on ValidationService
 const applyDynamicLessonStates = (
@@ -1209,9 +1264,21 @@ const FALLBACK_TECH_NAMES: Record<string, string> = {
 
 // Fallback lessons for languages without specific modules
 const getModulesForTechnology = (technology: string): Module[] => {
+  // Return cached modules if technology hasn't changed
+  if (cachedTechnology === technology && cachedModules !== null) {
+    return cachedModules;
+  }
+
+  // Update cache
+  cachedTechnology = technology;
+
   // Check if we have specific lessons for this technology
   if (technologyModules[technology]) {
-    return applyDynamicLessonStates(technologyModules[technology], technology);
+    cachedModules = applyDynamicLessonStates(
+      technologyModules[technology],
+      technology
+    );
+    return cachedModules;
   }
 
   // Generate basic structure for other technologies
@@ -1362,7 +1429,8 @@ const getModulesForTechnology = (technology: string): Module[] => {
     },
   ];
 
-  return applyDynamicLessonStates(fallbackModules, technology);
+  cachedModules = applyDynamicLessonStates(fallbackModules, technology);
+  return cachedModules!;
 };
 
 export function CourseSidebar({
@@ -1370,7 +1438,7 @@ export function CourseSidebar({
   currentTechnology,
   onLessonSelect,
 }: CourseSidebarProps) {
-  // Get modules specific to the current technology - memoized to prevent infinite re-renders
+  // Get modules - compute once and don't depend on render cycles
   const courseModules = useMemo(
     () => getModulesForTechnology(currentTechnology),
     [currentTechnology]
@@ -1380,12 +1448,14 @@ export function CourseSidebar({
     (acc: number, module: Module) => acc + module.lessons.length,
     0
   );
+
   const completedLessons = courseModules.reduce(
     (acc: number, module: Module) =>
       acc + module.lessons.filter((l: Lesson) => l.completed).length,
     0
   );
-  const progressPercentage = (completedLessons / totalLessons) * 100;
+
+  const progressPercentage = (completedLessons / totalLessons) * 100 || 0;
 
   // Get technology display name - memoized to prevent recalculation
   const displayName = useMemo(() => {

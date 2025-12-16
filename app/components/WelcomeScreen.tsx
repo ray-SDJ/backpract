@@ -82,6 +82,12 @@ const technologies = [
     description: "Document-based database operations",
     icon: "🍃",
   },
+  {
+    id: "graphql",
+    name: "GraphQL APIs",
+    description: "Build flexible, type-safe APIs",
+    icon: "📊",
+  },
 ];
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {

@@ -50,7 +50,8 @@ export type ProgrammingLanguage =
   | "scala"
   | "haskell"
   | "ocaml"
-  | "database"; // For database query languages (SQL, MongoDB)
+  | "database" // For database query languages (SQL, MongoDB)
+  | "graphql"; // For GraphQL API development
 
 // Technology mapping (maps course technology to programming languages)
 export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
@@ -127,4 +128,7 @@ export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
   sql: "database",
   mongodb: "database",
   nosql: "database",
+
+  // GraphQL
+  graphql: "nodejs",
 };

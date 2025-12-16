@@ -14,9 +14,19 @@ import {
 
 // Move lesson sequences outside component to prevent re-creation on every render
 const LESSON_SEQUENCES: Record<string, string[]> = {
-  java: ["1-1", "1-2", "1-3", "intro", "mvc", "data", "security", "testing"],
+  java: [
+    "1-1",
+    "1-2",
+    "1-3",
+    "intro",
+    "mvc",
+    "data",
+    "security",
+    "testing",
+    "graphql",
+  ],
   csharp: ["1-1", "1-2", "1-3", "intro", "database", "api", "auth", "testing"],
-  django: ["1-1", "1-2", "1-3", "intro", "third-party-apis"],
+  django: ["1-1", "1-2", "1-3", "intro", "third-party-apis", "graphql"],
   go: ["intro", "database", "api", "auth", "testing"],
   php: ["intro", "database", "api", "auth", "testing"],
   ruby: ["intro", "database", "api", "auth", "testing"],
@@ -47,7 +57,9 @@ const LESSON_SEQUENCES: Record<string, string[]> = {
     "4-2",
     "4-3",
     "third-party-apis",
+    "graphql",
   ],
+  nextjs: ["1-1", "1-2", "1-3", "graphql"],
 };
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
