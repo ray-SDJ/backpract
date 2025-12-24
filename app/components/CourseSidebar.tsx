@@ -1,5 +1,4 @@
 import { CheckCircle2, Circle, Lock, PlayCircle } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
 import { Progress } from "./ui/progress";
 import { ValidationService } from "./lessons/ValidationService";
 import { useMemo } from "react";
@@ -1486,8 +1485,8 @@ export function CourseSidebar({
   }, [currentTechnology]);
 
   return (
-    <div className="w-80 border-r bg-slate-50 flex flex-col h-screen">
-      <div className="p-6 border-b bg-white">
+    <div className="w-80 border-r bg-slate-50 flex flex-col h-screen max-h-screen min-h-0">
+      <div className="p-6 border-b bg-white flex-shrink-0">
         <h2 className="mb-1">{displayName}</h2>
         <p className="text-slate-600 text-sm mb-4">
           Master backend development with {displayName}
@@ -1503,7 +1502,7 @@ export function CourseSidebar({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-4 space-y-6">
           {courseModules.map((module) => (
             <div key={module.id} className="space-y-2">
@@ -1551,7 +1550,7 @@ export function CourseSidebar({
             </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
