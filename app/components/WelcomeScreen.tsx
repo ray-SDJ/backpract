@@ -88,6 +88,12 @@ const technologies = [
     description: "Build flexible, type-safe APIs",
     icon: "📊",
   },
+  {
+    id: "ml",
+    name: "Machine Learning & AI",
+    description: "Build intelligent applications with ML",
+    icon: "🤖",
+  },
 ];
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {

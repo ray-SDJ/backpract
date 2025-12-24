@@ -51,7 +51,8 @@ export type ProgrammingLanguage =
   | "haskell"
   | "ocaml"
   | "database" // For database query languages (SQL, MongoDB)
-  | "graphql"; // For GraphQL API development
+  | "graphql" // For GraphQL API development
+  | "ml"; // For Machine Learning and AI
 
 // Technology mapping (maps course technology to programming languages)
 export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
@@ -131,4 +132,15 @@ export const TECHNOLOGY_TO_LANGUAGE_MAP: Record<string, ProgrammingLanguage> = {
 
   // GraphQL
   graphql: "nodejs",
+
+  // Machine Learning / AI
+  ml: "ml",
+  "machine-learning": "ml",
+  "machine learning": "ml",
+  ai: "ml",
+  tensorflow: "ml",
+  pytorch: "ml",
+  keras: "ml",
+  "scikit-learn": "ml",
+  sklearn: "ml",
 };

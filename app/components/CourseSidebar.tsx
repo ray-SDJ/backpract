@@ -1222,6 +1222,70 @@ const technologyModules: Record<string, Module[]> = {
       ],
     },
   ],
+
+  // Machine Learning & AI lessons
+  ml: [
+    {
+      id: "1",
+      title: "ML Fundamentals",
+      lessons: [
+        {
+          id: "intro",
+          title: "Introduction to Machine Learning",
+          duration: "20 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "python-basics",
+          title: "Python ML Libraries",
+          duration: "35 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: "Building ML Models",
+      lessons: [
+        {
+          id: "scikit-learn",
+          title: "Scikit-learn Essentials",
+          duration: "45 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "deep-learning",
+          title: "Deep Learning with TensorFlow",
+          duration: "60 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
+      id: "3",
+      title: "Production & Best Practices",
+      lessons: [
+        {
+          id: "deployment",
+          title: "Model Deployment & MLOps",
+          duration: "50 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "cheatsheet",
+          title: "ML Cheat Sheet",
+          duration: "Reference",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+  ],
 };
 
 // Cache to prevent recreating modules on every render
