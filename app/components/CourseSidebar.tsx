@@ -106,6 +106,13 @@ const technologyModules: Record<string, Module[]> = {
           completed: false,
           locked: false,
         },
+        {
+          id: "react-integration",
+          title: "Connecting React to Node.js",
+          duration: "60 min",
+          completed: false,
+          locked: false,
+        },
       ],
     },
     {

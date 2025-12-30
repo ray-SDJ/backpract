@@ -3,3 +3,4 @@ export { DatabaseSection } from "./DatabaseSection";
 export { ApiSection } from "./ApiSection";
 export { AuthSection } from "./AuthSection";
 export { TestingSection } from "./TestingSection";
+export { ReactIntegrationSection } from "./ReactIntegrationSection";

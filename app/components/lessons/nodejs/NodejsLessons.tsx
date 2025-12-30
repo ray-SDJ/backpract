@@ -8,6 +8,7 @@ import {
   ApiSection,
   AuthSection,
   TestingSection,
+  ReactIntegrationSection,
 } from "./sections";
 
 // TypeScript interfaces
@@ -30,6 +31,7 @@ export default function NodejsTutorial() {
     ApiSection,
     AuthSection,
     TestingSection,
+    ReactIntegrationSection,
   ];
 
   const Section: React.FC<SectionProps> = ({ section }) => {
