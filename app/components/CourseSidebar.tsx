@@ -518,6 +518,19 @@ const technologyModules: Record<string, Module[]> = {
   // Java/Spring Boot lessons
   java: [
     {
+      id: "0",
+      title: "Setup & Tools",
+      lessons: [
+        {
+          id: "intellij-setup",
+          title: "IntelliJ IDEA Project Setup",
+          duration: "30 min",
+          completed: false,
+          locked: false,
+        },
+      ],
+    },
+    {
       id: "1",
       title: "Backend Development Basics",
       lessons: [
@@ -552,6 +565,13 @@ const technologyModules: Record<string, Module[]> = {
           id: "intro",
           title: "Introduction to Spring Boot",
           duration: "25 min",
+          completed: false,
+          locked: false,
+        },
+        {
+          id: "springboot",
+          title: "Spring Boot Complete Guide",
+          duration: "60 min",
           completed: false,
           locked: false,
         },
