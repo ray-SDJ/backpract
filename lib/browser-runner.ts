@@ -1,7 +1,8 @@
-// In-browser code execution for JavaScript, TypeScript, Python and SQL.
-// Each run happens inside a Web Worker, so user code can't touch the page and
-// infinite loops are stopped by terminating the worker. Other languages still
-// go through the Piston server route (see lib/piston.ts).
+// In-browser code execution for JavaScript, TypeScript, Python, SQL, PHP and
+// Ruby. Each run happens inside a Web Worker, so user code can't touch the
+// page and infinite loops are stopped by terminating the worker. Compiled
+// languages (Java, C#, Go, Rust, C++) go through the Piston server route
+// (see lib/piston.ts and runner/).
 
 export interface RunResult {
   output: string;
@@ -9,19 +10,38 @@ export interface RunResult {
   exitCode: number;
 }
 
-type BrowserLanguage = "javascript" | "typescript" | "python" | "sql";
+type BrowserLanguage =
+  | "javascript"
+  | "typescript"
+  | "python"
+  | "sql"
+  | "php"
+  | "ruby";
+// Languages whose runtime is downloaded once and kept in a long-lived worker
+type PersistentLanguage = Exclude<BrowserLanguage, "javascript" | "typescript">;
 
 const PYODIDE_BASE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
 const SQLJS_BASE = "https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/";
+const PHP_WASM = "https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/PhpWeb.mjs";
+const RUBY_VM = "https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@2.10.1/dist/browser/+esm";
+const RUBY_WASM =
+  "https://cdn.jsdelivr.net/npm/@ruby/3.4-wasm-wasi@2.10.1/dist/ruby+stdlib.wasm";
 
 const RUN_TIMEOUT_MS = 10_000;
-// Pyodide is ~10 MB on first load, so allow time before the run itself starts
+// Runtimes are several MB on first load, so allow time before the run starts
 const LOAD_TIMEOUT_MS = 120_000;
 
+const BROWSER_LANGUAGES: BrowserLanguage[] = [
+  "javascript",
+  "typescript",
+  "python",
+  "sql",
+  "php",
+  "ruby",
+];
+
 export function canRunInBrowser(language: string): boolean {
-  return ["javascript", "typescript", "python", "sql"].includes(
-    language.toLowerCase()
-  );
+  return BROWSER_LANGUAGES.includes(language.toLowerCase() as BrowserLanguage);
 }
 
 // ---------------------------------------------------------------------------
@@ -29,6 +49,7 @@ export function canRunInBrowser(language: string): boolean {
 //   in:  { id, code }
 //   out: { id, type: "started" }            run timer starts (after loading)
 //        { id, type: "stdout"|"stderr", text }
+//        { id, type: "loadError", text }    runtime couldn't be downloaded
 //        { id, type: "done", exitCode }
 // ---------------------------------------------------------------------------
 
@@ -104,13 +125,28 @@ self.onmessage = async (e) => {
 };
 `;
 
+// Shared by the persistent workers: wait for the runtime, then hand over to run()
+const LOADER = `
+const handle = (ready, run) => {
+  self.onmessage = async (e) => {
+    const { id, code } = e.data;
+    const post = (type, extra) => self.postMessage({ id, type, ...extra });
+    let runtime;
+    try {
+      runtime = await ready;
+    } catch (err) {
+      post("loadError", { text: String((err && err.message) || err) });
+      return;
+    }
+    post("done", { exitCode: await run(runtime, code, post) });
+  };
+};
+`;
+
 const PYTHON_WORKER = `
 importScripts("${PYODIDE_BASE}pyodide.js");
-const ready = loadPyodide({ indexURL: "${PYODIDE_BASE}" });
-self.onmessage = async (e) => {
-  const { id, code } = e.data;
-  const post = (type, extra) => self.postMessage({ id, type, ...extra });
-  const py = await ready;
+${LOADER}
+handle(loadPyodide({ indexURL: "${PYODIDE_BASE}" }), async (py, code, post) => {
   py.setStdout({ batched: (t) => post("stdout", { text: t + "\\n" }) });
   py.setStderr({ batched: (t) => post("stderr", { text: t + "\\n" }) });
   // Loads numpy, pandas, scikit-learn, ... when imported; unknown packages are skipped
@@ -118,11 +154,10 @@ self.onmessage = async (e) => {
   const globals = py.globals.get("dict")();
   globals.set("__name__", "__main__");
   post("started");
-  let exitCode = 0;
   try {
     await py.runPythonAsync(code, { globals });
+    return 0;
   } catch (err) {
-    exitCode = 1;
     // Drop Pyodide's own frames so the traceback starts at the user's code
     const text = String(err.message || err);
     const userFrames = text.indexOf('  File "<exec>"');
@@ -130,16 +165,16 @@ self.onmessage = async (e) => {
       text: userFrames === -1 ? text
         : "Traceback (most recent call last):\\n" + text.slice(userFrames),
     });
+    return 1;
   } finally {
     globals.destroy();
   }
-  post("done", { exitCode });
-};
+});
 `;
 
 const SQL_WORKER = `
 importScripts("${SQLJS_BASE}sql-wasm.js");
-const ready = initSqlJs({ locateFile: (f) => "${SQLJS_BASE}" + f });
+${LOADER}
 const table = ({ columns, values }) => {
   const cell = (v) => (v === null ? "NULL" : String(v));
   const widths = columns.map((c, i) =>
@@ -153,27 +188,104 @@ const table = ({ columns, values }) => {
     "(" + values.length + " row" + (values.length === 1 ? "" : "s") + ")",
   ].join("\\n");
 };
-self.onmessage = async (e) => {
-  const { id, code } = e.data;
-  const post = (type, extra) => self.postMessage({ id, type, ...extra });
-  const SQL = await ready;
+handle(initSqlJs({ locateFile: (f) => "${SQLJS_BASE}" + f }), async (SQL, code, post) => {
   post("started");
   const db = new SQL.Database(); // fresh database every run
-  let exitCode = 0;
   try {
     const results = db.exec(code);
     const text = results.length
       ? results.map(table).join("\\n\\n")
       : "Query OK (" + db.getRowsModified() + " rows affected)";
     post("stdout", { text: text + "\\n" });
+    return 0;
   } catch (err) {
-    exitCode = 1;
     post("stderr", { text: String(err.message || err) + "\\n" });
+    return 1;
   } finally {
     db.close();
   }
-  post("done", { exitCode });
+});
+`;
+
+// Module worker: php-wasm is published as ES modules. Its web build bundles
+// Emscripten canvas/SDL helpers that reference document and window at load
+// time, so give it inert stand-ins (workers have neither) before importing.
+const PHP_WORKER = `
+${LOADER}
+self.window = self;
+self.document = {
+  addEventListener() {}, removeEventListener() {},
+  querySelector: () => null, getElementById: () => null,
+  currentScript: null, body: null,
 };
+let sink = null;
+let used = false;
+let fatal = false;
+const ready = (async () => {
+  const { PhpWeb } = await import("${PHP_WASM}");
+  const php = new PhpWeb({ version: "8.4" });
+  const text = (e) => [].concat(e.detail).join("");
+  // PHP prints its errors to stdout; route them (and a fatal's stack trace) to stderr
+  php.addEventListener("output", (e) => {
+    if (!sink) return;
+    const t = text(e);
+    if (/^(PHP )?(Fatal|Parse) error:/m.test(t)) fatal = true;
+    const isError = fatal || /^(PHP )?(Warning|Notice|Deprecated):/m.test(t);
+    sink(isError ? "stderr" : "stdout", t);
+  });
+  php.addEventListener("error", (e) => sink && sink("stderr", text(e)));
+  await php.binary;
+  return php;
+})();
+handle(ready, async (php, code, post) => {
+  if (used) await php.refresh(); // fresh PHP state every run
+  used = true;
+  fatal = false;
+  sink = (type, text) => post(type, { text });
+  post("started");
+  try {
+    const status = await php.run(code);
+    return typeof status === "number" ? status : 0;
+  } catch (err) {
+    post("stderr", { text: String(err.message || err) + "\\n" });
+    return 1;
+  } finally {
+    sink = null;
+  }
+});
+`;
+
+// Module worker: ruby.wasm prints through console.log / console.warn
+const RUBY_WORKER = `
+import { DefaultRubyVM } from "${RUBY_VM}";
+${LOADER}
+let sink = null;
+console.log = (text) => sink && sink("stdout", String(text));
+console.warn = (text) => sink && sink("stderr", String(text));
+const ready = WebAssembly.compileStreaming(fetch("${RUBY_WASM}"));
+handle(ready, async (rubyModule, code, post) => {
+  const { vm } = await DefaultRubyVM(rubyModule); // fresh VM every run
+  sink = (type, text) => post(type, { text });
+  post("started");
+  try {
+    vm.eval(code);
+    return 0;
+  } catch (err) {
+    // Strip terminal colors and the eval wrapper's own frame
+    const text = String(err.message || err)
+      .replace(/\\u001b\\[[0-9;]*m|\\u0000/g, "")
+      .replace(/^-e:in 'Kernel\\.eval': /, "")
+      .split("\\n")
+      .filter((line) => !line.startsWith("-e:in 'Kernel.eval'"))
+      .join("\\n")
+      .trim();
+    post("stderr", { text: text + "\\n" });
+    return 1;
+  } finally {
+    try { vm.eval("$stdout.flush; $stderr.flush"); } catch {}
+    sink = null;
+  }
+});
 `;
 
 // ---------------------------------------------------------------------------
@@ -183,42 +295,52 @@ const RUNTIME_NAMES: Record<BrowserLanguage, string> = {
   typescript: "JavaScript",
   python: "Python",
   sql: "SQL",
+  php: "PHP",
+  ruby: "Ruby",
 };
 
-// Python and SQL workers are kept between runs so the runtime loads only once
-const persistentWorkers = new Map<"python" | "sql", Worker>();
+const PERSISTENT_WORKERS: Record<
+  PersistentLanguage,
+  { source: string; module: boolean }
+> = {
+  python: { source: PYTHON_WORKER, module: false },
+  sql: { source: SQL_WORKER, module: false },
+  php: { source: PHP_WORKER, module: true },
+  ruby: { source: RUBY_WORKER, module: true },
+};
+
+// Kept between runs so each runtime downloads and starts only once
+const persistentWorkers = new Map<PersistentLanguage, Worker>();
 let nextRunId = 0;
 
-function createWorker(source: string): Worker {
+const isPersistent = (lang: BrowserLanguage): lang is PersistentLanguage =>
+  lang in PERSISTENT_WORKERS;
+
+function createWorker(source: string, module: boolean): Worker {
   const url = URL.createObjectURL(
     new Blob([source], { type: "text/javascript" })
   );
-  const worker = new Worker(url);
+  const worker = new Worker(url, module ? { type: "module" } : undefined);
   URL.revokeObjectURL(url);
   return worker;
 }
 
-function getWorker(language: BrowserLanguage): {
-  worker: Worker;
-  persistent: boolean;
-} {
-  if (language === "python" || language === "sql") {
-    let worker = persistentWorkers.get(language);
-    if (!worker) {
-      worker = createWorker(language === "python" ? PYTHON_WORKER : SQL_WORKER);
-      persistentWorkers.set(language, worker);
-    }
-    return { worker, persistent: true };
+function getWorker(lang: BrowserLanguage): Worker {
+  if (!isPersistent(lang)) return createWorker(JS_WORKER, false);
+
+  let worker = persistentWorkers.get(lang);
+  if (!worker) {
+    const { source, module } = PERSISTENT_WORKERS[lang];
+    worker = createWorker(source, module);
+    persistentWorkers.set(lang, worker);
   }
-  return { worker: createWorker(JS_WORKER), persistent: false };
+  return worker;
 }
 
-function discardWorker(language: BrowserLanguage, worker: Worker) {
+function discardWorker(lang: BrowserLanguage, worker: Worker) {
   worker.terminate();
-  if (language === "python" || language === "sql") {
-    if (persistentWorkers.get(language) === worker) {
-      persistentWorkers.delete(language);
-    }
+  if (isPersistent(lang) && persistentWorkers.get(lang) === worker) {
+    persistentWorkers.delete(lang);
   }
 }
 
@@ -259,8 +381,12 @@ export async function runInBrowser(
     }
   }
 
-  const { worker, persistent } = getWorker(lang);
+  const worker = getWorker(lang);
   const id = ++nextRunId;
+  const loadFailure = (detail?: string) =>
+    `Couldn't load the ${RUNTIME_NAMES[lang]} runtime${
+      detail ? ` (${detail})` : ""
+    }. Check your internet connection and try again.`;
 
   return new Promise<RunResult>((resolve) => {
     let stdout = "";
@@ -279,7 +405,7 @@ export async function runInBrowser(
       if (failure) {
         stderr += (stderr && !stderr.endsWith("\n") ? "\n" : "") + failure;
         discardWorker(lang, worker);
-      } else if (!persistent) {
+      } else if (!isPersistent(lang)) {
         worker.terminate();
       }
       resolve(
@@ -308,20 +434,17 @@ export async function runInBrowser(
       } else if (msg.type === "stderr") {
         stderr += msg.text;
         combined += msg.text;
+      } else if (msg.type === "loadError") {
+        done(1, loadFailure(msg.text));
       } else if (msg.type === "done") {
         done(msg.exitCode);
       }
     };
 
-    // Fires when the runtime script itself can't load (offline, CDN blocked)
+    // Fires when the worker script itself can't load (offline, CDN blocked)
     const onError = (e: ErrorEvent) => {
       e.preventDefault();
-      done(
-        1,
-        `Couldn't load the ${RUNTIME_NAMES[lang]} runtime${
-          e.message ? ` (${e.message})` : ""
-        }. Check your internet connection and try again.`
-      );
+      done(1, loadFailure(e.message));
     };
 
     worker.addEventListener("message", onMessage);
