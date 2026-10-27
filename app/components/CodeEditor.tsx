@@ -16,6 +16,9 @@ interface CodeEditorProps {
 const TECH_TO_LANGUAGE: Record<string, string> = {
   nodejs: "javascript",
   python: "python",
+  django: "python",
+  ml: "python",
+  graphql: "javascript",
   java: "java",
   csharp: "csharp",
   go: "go",
@@ -136,18 +139,14 @@ export function CodeEditor({
   // Get language from technology
   const language = TECH_TO_LANGUAGE[currentTechnology] || "javascript";
 
-  // Initialize code
+  // The editor owns the code. initialCode is only read on mount (e.g. when the
+  // Practice tab remounts); syncing it back on every change ping-pongs with
+  // onCodeChange during fast typing and triggers "Maximum update depth exceeded".
+  // Parents should remount the editor (via key) to load different code.
   const [code, setCode] = useState(() => {
     if (initialCode) return initialCode;
     return DEFAULT_CODE[language] || DEFAULT_CODE.javascript;
   });
-
-  // Update code when initialCode changes
-  useEffect(() => {
-    if (initialCode) {
-      setCode(initialCode);
-    }
-  }, [initialCode]);
 
   // Notify parent of code changes
   useEffect(() => {
@@ -161,9 +160,7 @@ export function CodeEditor({
 
   // Handle reset
   const handleReset = () => {
-    const resetCode =
-      initialCode || DEFAULT_CODE[language] || DEFAULT_CODE.javascript;
-    setCode(resetCode);
+    setCode(DEFAULT_CODE[language] || DEFAULT_CODE.javascript);
   };
 
   // Handle copy to clipboard

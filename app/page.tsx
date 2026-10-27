@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Header } from "./components/Header";
-import { CourseSidebar } from "./components/CourseSidebar";
+import {
+  CourseSidebar,
+  getFirstLessonId,
+} from "./components/CourseSidebar";
 import LessonContent from "./components/LessonContent";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { CompletionScreen } from "./components/CompletionScreen";
 import { SessionManager } from "./services/SessionManager";
 import { pistonService } from "../lib/piston";
+import { canRunInBrowser, runInBrowser } from "../lib/browser-runner";
 import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
 import { Button } from "./components/ui/button";
 import { Menu } from "lucide-react";
@@ -38,7 +42,8 @@ export default function App() {
   // Clear session on browser refresh or close
   useEffect(() => {
     const handleBeforeUnload = () => {
-      SessionManager.clearSession();
+      // Keep completed lessons; only Restart clears all progress
+      SessionManager.endSession();
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -59,10 +64,22 @@ export default function App() {
     // Get total lessons for the technology (simplified - you can enhance this)
     const totalLessons = 5; // Adjust based on your actual lesson count per technology
 
+    const firstLessonId = getFirstLessonId(technology);
     SessionManager.startSession(technology, totalLessons);
+    SessionManager.updateCurrentLesson(firstLessonId);
     setCurrentTechnology(technology);
-    setCurrentLessonId("1-1");
+    setCurrentLessonId(firstLessonId);
+    setCurrentCode("");
     setAppState("learning");
+  }, []);
+
+  const handleGoHome = useCallback(() => {
+    SessionManager.endSession();
+    setAppState("welcome");
+    setOutput("");
+    setError(undefined);
+    setExitCode(undefined);
+    setCurrentCode("");
   }, []);
 
   const handleRestart = useCallback(() => {
@@ -101,12 +118,16 @@ export default function App() {
     setExitCode(undefined);
 
     try {
-      // Execute code using Piston
-      console.log("📡 Calling Piston API...");
-      const result = await pistonService.executeCode(code, language);
-      console.log("✅ Piston response:", result);
-
-      const formatted = pistonService.formatExecutionResult(result);
+      // JS/TS/Python/SQL run in the browser; other languages need the Piston server
+      let formatted;
+      if (canRunInBrowser(language)) {
+        formatted = await runInBrowser(code, language);
+      } else {
+        console.log("📡 Calling Piston API...");
+        const result = await pistonService.executeCode(code, language);
+        console.log("✅ Piston response:", result);
+        formatted = pistonService.formatExecutionResult(result);
+      }
       console.log("📋 Formatted result:", formatted);
 
       setOutput(formatted.output);
@@ -125,12 +146,15 @@ export default function App() {
   }, []);
 
   const handleTechnologyChange = useCallback((technology: string) => {
+    const firstLessonId = getFirstLessonId(technology);
     setCurrentTechnology(technology);
     // Reset lesson when switching technologies
-    setCurrentLessonId("1-1");
+    setCurrentLessonId(firstLessonId);
+    SessionManager.updateTechnology(technology, firstLessonId);
     setOutput("");
     setError(undefined);
     setExitCode(undefined);
+    setCurrentCode("");
   }, []);
 
   // Render based on app state
@@ -157,6 +181,7 @@ export default function App() {
       <Header
         currentTechnology={currentTechnology}
         onTechnologyChange={handleTechnologyChange}
+        onHome={handleGoHome}
       />
 
       <div className="flex flex-1 overflow-hidden">

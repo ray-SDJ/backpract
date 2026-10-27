@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     // Create timeout wrapper for Gemini API call (20 second timeout)
     const generateContentWithTimeout = Promise.race([
       ai.models.generateContent({
-        model: "models/gemini-1.5-flash", // Full model path for v1beta API
+        // gemini-1.5-flash is retired (404); override with GEMINI_MODEL if needed
+        model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
         contents: prompt,
       }),
       new Promise<never>((_, reject) =>

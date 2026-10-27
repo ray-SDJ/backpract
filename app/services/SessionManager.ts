@@ -76,6 +76,29 @@ export class SessionManager {
   }
 
   /**
+   * Switch the session to another technology
+   */
+  static updateTechnology(technology: string, lessonId: string): void {
+    const session = this.getSession();
+    if (!session) return;
+
+    session.technology = technology;
+    session.currentLessonId = lessonId;
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    }
+  }
+
+  /**
+   * End the session (back to the homepage) without clearing lesson progress
+   */
+  static endSession(): void {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(this.SESSION_KEY);
+  }
+
+  /**
    * Mark a lesson as completed
    */
   static markLessonCompleted(lessonId: string): void {
@@ -127,7 +150,7 @@ export class SessionManager {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith("lesson_completed_")) {
+      if (key && key.startsWith("lesson-completed-")) {
         keysToRemove.push(key);
       }
     }

@@ -619,6 +619,7 @@ export default function LessonContent({
                 {/* Code Editor */}
                 <div className="flex-1 min-h-[400px] md:min-h-0">
                   <CodeEditor
+                    key={`${currentTechnology}-${lessonId}`}
                     onRunCode={onRunCode}
                     currentTechnology={currentTechnology}
                     currentLessonId={lessonId}

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// The public emkc.org Piston API is whitelist-only since 2/15/2026, so point
+// PISTON_API_URL at a self-hosted instance (e.g. http://localhost:2000/api/v2).
+const PISTON_API_URL =
+  process.env.PISTON_API_URL || "https://emkc.org/api/v2/piston";
+
 export async function POST(request: NextRequest) {
   try {
     console.log("🔧 Proxy: Received request");
@@ -15,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const pistonResponse = await fetch(
-        "https://emkc.org/api/v2/piston/execute",
+        `${PISTON_API_URL.replace(/\/+$/, "")}/execute`,
         {
           method: "POST",
           headers: {
@@ -32,10 +37,12 @@ export async function POST(request: NextRequest) {
       if (!pistonResponse.ok) {
         const errorText = await pistonResponse.text();
         console.error("❌ Proxy: Piston error:", errorText);
+        const error =
+          pistonResponse.status === 401 && !process.env.PISTON_API_URL
+            ? "Code execution is not configured: the public Piston API now requires whitelisting. Set PISTON_API_URL to a self-hosted Piston instance."
+            : `Piston error: ${pistonResponse.statusText} - ${errorText}`;
         return NextResponse.json(
-          {
-            error: `Piston error: ${pistonResponse.statusText} - ${errorText}`,
-          },
+          { error },
           { status: pistonResponse.status }
         );
       }

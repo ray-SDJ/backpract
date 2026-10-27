@@ -45,6 +45,9 @@ const LANGUAGE_MAP: Record<
   string,
   { language: string; version: string; extension: string }
 > = {
+  // SQL runs as a SQLite script
+  sql: { language: "sqlite3", version: "3.36.0", extension: "sql" },
+
   // Core Backend Languages
   javascript: { language: "javascript", version: "18.15.0", extension: "js" },
   typescript: { language: "typescript", version: "5.0.3", extension: "ts" },

@@ -17,6 +17,7 @@ import { HelpModal } from "./HelpModal";
 interface HeaderProps {
   currentTechnology: string;
   onTechnologyChange: (tech: string) => void;
+  onHome: () => void;
 }
 
 // Move technologies array outside component to prevent re-creation on every render
@@ -88,16 +89,55 @@ const technologies = [
     icon: "⚡",
     description: "High-performance backends",
   },
+  {
+    id: "nextjs",
+    name: "Next.js",
+    icon: "⚡",
+    description: "Full-stack React framework",
+  },
+  {
+    id: "sql",
+    name: "SQL",
+    icon: "🗄️",
+    description: "Relational database queries",
+  },
+  {
+    id: "mongodb",
+    name: "MongoDB",
+    icon: "🍃",
+    description: "Document-based NoSQL",
+  },
+  {
+    id: "graphql",
+    name: "GraphQL",
+    icon: "📊",
+    description: "Flexible, type-safe APIs",
+  },
+  {
+    id: "ml",
+    name: "Machine Learning",
+    icon: "🤖",
+    description: "Intelligent applications with ML",
+  },
 ];
 
-export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
+export function Header({
+  currentTechnology,
+  onTechnologyChange,
+  onHome,
+}: HeaderProps) {
   const currentTech =
     technologies.find((t) => t.id === currentTechnology) || technologies[0];
 
   return (
     <header className="h-14 border-b bg-white flex items-center justify-between px-3 md:px-6 flex-shrink-0">
       <div className="flex items-center gap-2 md:gap-4">
-        <div className="flex items-center gap-1 md:gap-2">
+        <button
+          type="button"
+          onClick={onHome}
+          title="Back to homepage"
+          className="flex items-center gap-1 md:gap-2 cursor-pointer"
+        >
           <Code className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
           <h1 className="text-base md:text-xl font-semibold hidden sm:block">
             Backend Practice
@@ -108,7 +148,7 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
           <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
             v1.0
           </Badge>
-        </div>
+        </button>
 
         <div className="h-6 w-px bg-slate-300 hidden sm:block" />
 
@@ -149,7 +189,10 @@ export function Header({ currentTechnology, onTechnologyChange }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-1 md:gap-2">
-        <ProgressModal>
+        <ProgressModal
+          currentTechnology={currentTechnology}
+          technologyName={currentTech.name}
+        >
           <Button variant="ghost" size="sm" className="gap-1 md:gap-2">
             <Trophy className="w-4 h-4" />
             <span className="text-sm hidden sm:inline">Progress</span>

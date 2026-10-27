@@ -1523,6 +1523,20 @@ const getModulesForTechnology = (technology: string): Module[] => {
   return cachedModules!;
 };
 
+// First lesson shown when a technology is opened (SQL starts at "sql-basics", not "1-1")
+export const getFirstLessonId = (technology: string): string =>
+  getModulesForTechnology(technology)[0]?.lessons[0]?.id ?? "1-1";
+
+// Flat lesson list with completion read fresh (the module cache can be stale)
+export const getLessonsForTechnology = (technology: string) =>
+  getModulesForTechnology(technology).flatMap((module) =>
+    module.lessons.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.title,
+      completed: ValidationService.isLessonCompleted(lesson.id, technology),
+    }))
+  );
+
 export function CourseSidebar({
   currentLessonId,
   currentTechnology,
