@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Play, RotateCcw, Copy, Check } from "lucide-react";
 import { Button } from "./ui/button";
+import { canRunInBrowser } from "../../lib/browser-runner";
 
 interface CodeEditorProps {
   onRunCode: (code: string, language: string) => void;
@@ -153,10 +154,13 @@ export function CodeEditor({
     onCodeChange?.(code);
   }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Java, C#, Go, Rust and C++ need a compiler, which the browser doesn't have
+  const canRun = canRunInBrowser(language);
+
   // Handle code execution
   const handleRun = useCallback(() => {
-    onRunCode(code, language);
-  }, [code, language, onRunCode]);
+    if (canRun) onRunCode(code, language);
+  }, [canRun, code, language, onRunCode]);
 
   // Handle reset
   const handleReset = () => {
@@ -267,8 +271,13 @@ export function CodeEditor({
           <Button
             size="sm"
             onClick={handleRun}
+            disabled={!canRun}
             className="h-8 px-4 bg-green-600 hover:bg-green-700 text-white font-medium"
-            title="Run code (Ctrl+Enter)"
+            title={
+              canRun
+                ? "Run code (Ctrl+Enter)"
+                : `Running ${languageDisplayName} isn't supported yet`
+            }
           >
             <Play className="w-4 h-4 mr-1.5" />
             Run
@@ -310,13 +319,19 @@ export function CodeEditor({
           <span>Lines: {code.split("\n").length}</span>
           <span>Characters: {code.length}</span>
         </div>
-        <div className="text-xs text-slate-400">
-          Press{" "}
-          <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300">
-            Ctrl+Enter
-          </kbd>{" "}
-          to run
-        </div>
+        {canRun ? (
+          <div className="text-xs text-slate-400">
+            Press{" "}
+            <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300">
+              Ctrl+Enter
+            </kbd>{" "}
+            to run
+          </div>
+        ) : (
+          <div className="text-xs text-amber-400">
+            Running {languageDisplayName} code isn&apos;t supported yet
+          </div>
+        )}
       </div>
     </div>
   );

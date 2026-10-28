@@ -1,8 +1,7 @@
 // In-browser code execution for JavaScript, TypeScript, Python, SQL, PHP and
 // Ruby. Each run happens inside a Web Worker, so user code can't touch the
 // page and infinite loops are stopped by terminating the worker. Compiled
-// languages (Java, C#, Go, Rust, C++) go through the Piston server route
-// (see lib/piston.ts and runner/).
+// languages (Java, C#, Go, Rust, C++) can't run in the browser.
 
 export interface RunResult {
   output: string;

@@ -10,7 +10,6 @@ import LessonContent from "./components/LessonContent";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { CompletionScreen } from "./components/CompletionScreen";
 import { SessionManager } from "./services/SessionManager";
-import { pistonService } from "../lib/piston";
 import { canRunInBrowser, runInBrowser } from "../lib/browser-runner";
 import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
 import { Button } from "./components/ui/button";
@@ -118,17 +117,11 @@ export default function App() {
     setExitCode(undefined);
 
     try {
-      // JS/TS/Python/SQL run in the browser; other languages need the Piston server
-      let formatted;
-      if (canRunInBrowser(language)) {
-        formatted = await runInBrowser(code, language);
-      } else {
-        console.log("📡 Calling Piston API...");
-        const result = await pistonService.executeCode(code, language);
-        console.log("✅ Piston response:", result);
-        formatted = pistonService.formatExecutionResult(result);
+      // The editor disables Run for languages that can't run in the browser
+      if (!canRunInBrowser(language)) {
+        throw new Error(`Running ${language} code isn't supported yet.`);
       }
-      console.log("📋 Formatted result:", formatted);
+      const formatted = await runInBrowser(code, language);
 
       setOutput(formatted.output);
       setError(formatted.error);
