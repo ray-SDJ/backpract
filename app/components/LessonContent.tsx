@@ -65,6 +65,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "./ui/resizable";
+import { useIsMobile } from "./ui/use-mobile";
+
+// Wider, highlighted drag target for the practice-tab dividers
+const HANDLE_CLASS =
+  "bg-slate-300 hover:bg-blue-400 data-[resize-handle-state=drag]:bg-blue-500 transition-colors";
 
 import { useEffect, useState } from "react";
 import { LessonRegistry } from "./lessons/LessonRegistry";
@@ -111,6 +121,7 @@ export default function LessonContent({
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [isCheckingWork, setIsCheckingWork] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadLesson = async () => {
@@ -435,209 +446,255 @@ export default function LessonContent({
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="practice" className="h-full m-0 flex flex-col">
-              {/* Practice Instructions */}
-              {lessonData.practiceInstructions?.length > 0 && (
-                <div className="p-4 bg-blue-50 border-b border-blue-200">
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Code className="w-5 h-5 text-blue-600" />
-                    Practice Questions
-                  </h3>
-                  <div className="space-y-2">
-                    {lessonData.practiceInstructions.map(
-                      (instruction, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start gap-3 bg-white p-3 rounded-lg border border-blue-100"
-                        >
-                          <div className="mt-0.5">
-                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                              <span className="text-xs font-medium text-blue-600">
-                                {index + 1}
+            <TabsContent value="practice" className="h-full m-0">
+              {/* Drag the dividers to resize; sizes are remembered per browser */}
+              <ResizablePanelGroup
+                direction="vertical"
+                autoSaveId="practice-layout"
+              >
+                {/* Practice Instructions */}
+                {lessonData.practiceInstructions?.length > 0 && (
+                  <>
+                    <ResizablePanel
+                      id="practice-instructions"
+                      order={1}
+                      defaultSize={35}
+                      minSize={8}
+                    >
+                      <div className="h-full overflow-y-auto p-4 bg-blue-50">
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Code className="w-5 h-5 text-blue-600" />
+                          Practice Questions
+                        </h3>
+                        <div className="space-y-2">
+                          {lessonData.practiceInstructions.map(
+                            (instruction, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-3 bg-white p-3 rounded-lg border border-blue-100"
+                              >
+                                <div className="mt-0.5">
+                                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-xs font-medium text-blue-600">
+                                      {index + 1}
+                                    </span>
+                                  </div>
+                                </div>
+                                <p className="text-slate-700 text-sm">
+                                  {instruction}
+                                </p>
+                              </div>
+                            )
+                          )}
+                        </div>
+
+                        {/* Check Work Button (AI-powered) */}
+                        {lessonData.solution && (
+                          <div className="mt-4 pt-3 border-t border-blue-200">
+                            <Button
+                              onClick={handleCheckWork}
+                              disabled={
+                                !currentCode ||
+                                currentCode.trim() === "" ||
+                                isCheckingWork
+                              }
+                              className="w-full bg-purple-600 hover:bg-purple-700"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              {isCheckingWork
+                                ? "Checking..."
+                                : "Check Work with AI"}
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* AI Feedback Display */}
+                        {aiFeedback && (
+                          <div className="mt-3 p-4 rounded-lg border bg-purple-50 border-purple-200">
+                            <div className="flex items-start gap-2 mb-2">
+                              <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-purple-900 mb-2">
+                                  AI Feedback
+                                </h4>
+                                <div className="text-sm text-purple-800 whitespace-pre-wrap">
+                                  {aiFeedback}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* AI Error Display */}
+                        {aiError && (
+                          <div className="mt-3 p-3 rounded-lg border bg-red-50 border-red-200">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-red-600" />
+                              <span className="text-sm text-red-800">
+                                {aiError}
                               </span>
                             </div>
                           </div>
-                          <p className="text-slate-700 text-sm">
-                            {instruction}
-                          </p>
-                        </div>
-                      )
-                    )}
-                  </div>
+                        )}
 
-                  {/* Check Work Button (AI-powered) */}
-                  {lessonData.solution && (
-                    <div className="mt-4 pt-3 border-t border-blue-200">
-                      <Button
-                        onClick={handleCheckWork}
-                        disabled={
-                          !currentCode ||
-                          currentCode.trim() === "" ||
-                          isCheckingWork
-                        }
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        {isCheckingWork ? "Checking..." : "Check Work with AI"}
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* AI Feedback Display */}
-                  {aiFeedback && (
-                    <div className="mt-3 p-4 rounded-lg border bg-purple-50 border-purple-200">
-                      <div className="flex items-start gap-2 mb-2">
-                        <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-purple-900 mb-2">
-                            AI Feedback
-                          </h4>
-                          <div className="text-sm text-purple-800 whitespace-pre-wrap">
-                            {aiFeedback}
+                        {/* Validation Controls */}
+                        {lessonData?.validationCriteria && (
+                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-blue-200">
+                            <div className="flex items-center gap-2">
+                              {isLessonCompleted ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-green-100 text-green-800"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Completed
+                                </Badge>
+                              ) : (
+                                <div className="text-xs text-slate-600">
+                                  <span className="font-medium">💡 Tip:</span>{" "}
+                                  Complete validation to mark this lesson as
+                                  done
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={handleValidatePractice}
+                                disabled={
+                                  !currentCode || currentCode.trim() === ""
+                                }
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Play className="w-4 h-4 mr-2" />
+                                Validate Code
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                        )}
 
-                  {/* AI Error Display */}
-                  {aiError && (
-                    <div className="mt-3 p-3 rounded-lg border bg-red-50 border-red-200">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-red-600" />
-                        <span className="text-sm text-red-800">{aiError}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Validation Controls */}
-                  {lessonData?.validationCriteria && (
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-blue-200">
-                      <div className="flex items-center gap-2">
-                        {isLessonCompleted ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-green-100 text-green-800"
+                        {/* Validation Results */}
+                        {validationResult && (
+                          <div
+                            className={`mt-3 p-3 rounded-lg border ${
+                              validationResult.valid
+                                ? "bg-green-50 border-green-200"
+                                : "bg-red-50 border-red-200"
+                            }`}
                           >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Completed
-                          </Badge>
-                        ) : (
-                          <div className="text-xs text-slate-600">
-                            <span className="font-medium">💡 Tip:</span>{" "}
-                            Complete validation to mark this lesson as done
+                            <div className="flex items-center gap-2 mb-2">
+                              {validationResult.valid ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <AlertCircle className="w-5 h-5 text-red-600" />
+                              )}
+                              <span
+                                className={`font-medium ${
+                                  validationResult.valid
+                                    ? "text-green-800"
+                                    : "text-red-800"
+                                }`}
+                              >
+                                {validationResult.message}
+                              </span>
+                            </div>
+
+                            {validationResult.completedCriteria.length > 0 && (
+                              <div className="space-y-1 mt-2">
+                                <h4 className="font-semibold text-xs text-slate-700 mb-1">
+                                  Completed Requirements:
+                                </h4>
+                                {validationResult.completedCriteria.map(
+                                  (criteria, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <CheckSquare className="w-3 h-3 text-green-600" />
+                                      <span className="text-green-700">
+                                        {criteria}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            )}
+
+                            {validationResult.failedCriteria.length > 0 && (
+                              <div className="space-y-1 mt-2">
+                                <h4 className="font-semibold text-xs text-slate-700 mb-1">
+                                  Missing Requirements:
+                                </h4>
+                                {validationResult.failedCriteria.map(
+                                  (criteria, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <div className="w-3 h-3 border-2 border-slate-300 rounded"></div>
+                                      <span className="text-slate-600">
+                                        {criteria}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleValidatePractice}
-                          disabled={!currentCode || currentCode.trim() === ""}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          Validate Code
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                    </ResizablePanel>
+                    <ResizableHandle withHandle className={HANDLE_CLASS} />
+                  </>
+                )}
 
-                  {/* Validation Results */}
-                  {validationResult && (
-                    <div
-                      className={`mt-3 p-3 rounded-lg border ${
-                        validationResult.valid
-                          ? "bg-green-50 border-green-200"
-                          : "bg-red-50 border-red-200"
-                      }`}
+                {/* Code Editor and Output */}
+                <ResizablePanel
+                  id="practice-workspace"
+                  order={2}
+                  defaultSize={65}
+                  minSize={25}
+                >
+                  <ResizablePanelGroup
+                    direction={isMobile ? "vertical" : "horizontal"}
+                    autoSaveId={
+                      isMobile ? "editor-output-mobile" : "editor-output"
+                    }
+                  >
+                    {/* Code Editor */}
+                    <ResizablePanel
+                      id="editor"
+                      order={1}
+                      defaultSize={60}
+                      minSize={20}
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        {validationResult.valid ? (
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                        ) : (
-                          <AlertCircle className="w-5 h-5 text-red-600" />
-                        )}
-                        <span
-                          className={`font-medium ${
-                            validationResult.valid
-                              ? "text-green-800"
-                              : "text-red-800"
-                          }`}
-                        >
-                          {validationResult.message}
-                        </span>
-                      </div>
+                      <CodeEditor
+                        key={`${currentTechnology}-${lessonId}`}
+                        onRunCode={onRunCode}
+                        currentTechnology={currentTechnology}
+                        currentLessonId={lessonId}
+                        initialCode={currentCode}
+                        onCodeChange={onCodeChange}
+                      />
+                    </ResizablePanel>
+                    <ResizableHandle withHandle className={HANDLE_CLASS} />
 
-                      {validationResult.completedCriteria.length > 0 && (
-                        <div className="space-y-1 mt-2">
-                          <h4 className="font-semibold text-xs text-slate-700 mb-1">
-                            Completed Requirements:
-                          </h4>
-                          {validationResult.completedCriteria.map(
-                            (criteria, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-2 text-xs"
-                              >
-                                <CheckSquare className="w-3 h-3 text-green-600" />
-                                <span className="text-green-700">
-                                  {criteria}
-                                </span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      )}
-
-                      {validationResult.failedCriteria.length > 0 && (
-                        <div className="space-y-1 mt-2">
-                          <h4 className="font-semibold text-xs text-slate-700 mb-1">
-                            Missing Requirements:
-                          </h4>
-                          {validationResult.failedCriteria.map(
-                            (criteria, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-2 text-xs"
-                              >
-                                <div className="w-3 h-3 border-2 border-slate-300 rounded"></div>
-                                <span className="text-slate-600">
-                                  {criteria}
-                                </span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Code Editor and Output */}
-              <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-0">
-                {/* Code Editor */}
-                <div className="flex-1 min-h-[400px] md:min-h-0">
-                  <CodeEditor
-                    key={`${currentTechnology}-${lessonId}`}
-                    onRunCode={onRunCode}
-                    currentTechnology={currentTechnology}
-                    currentLessonId={lessonId}
-                    initialCode={currentCode}
-                    onCodeChange={onCodeChange}
-                  />
-                </div>
-
-                {/* Output Console */}
-                <div className="flex-1 min-h-[300px] md:min-h-0">
-                  <OutputConsole
-                    output={output}
-                    error={codeError}
-                    isRunning={isRunning}
-                    exitCode={exitCode}
-                  />
-                </div>
-              </div>
+                    {/* Output Console */}
+                    <ResizablePanel
+                      id="output"
+                      order={2}
+                      defaultSize={40}
+                      minSize={15}
+                    >
+                      <OutputConsole
+                        output={output}
+                        error={codeError}
+                        isRunning={isRunning}
+                        exitCode={exitCode}
+                      />
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
+                </ResizablePanel>
+              </ResizablePanelGroup>
             </TabsContent>
 
             <TabsContent value="hints" className="h-full m-0">
